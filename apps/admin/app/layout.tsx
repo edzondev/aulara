@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "@aulara/ui/globals.css";
 import type { PropsWithChildren } from "react";
 
 const geistSans = Geist({
-	variable: "--font-geist-sans",
+	variable: "--font-sans",
 	subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+	variable: "--font-mono",
 	subsets: ["latin"],
 });
 
@@ -24,7 +24,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
 			lang="en"
 			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
 		>
-			<body className="min-h-full flex flex-col">{children}</body>
+			<body className="relative">
+				<div className="isolate relative flex min-h-svh flex-col">{children}</div>
+			</body>
 		</html>
 	);
 }
