@@ -44,84 +44,77 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
-	--radius-sm: calc(var(--radius) * 0.6);
-	--radius-md: calc(var(--radius) * 0.8);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) * 1.4);
-	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+	--radius-xl: 10px;
+	--radius-2xl: 10px;
 }
 
 :root {
-	--radius: 0.625rem;
-	--background: var(--color-white);
-	--foreground: var(--color-neutral-800);
-	--card: var(--color-white);
-	--card-foreground: var(--color-neutral-800);
-	--popover: var(--color-white);
-	--popover-foreground: var(--color-neutral-800);
-	--primary: var(--color-neutral-800);
-	--primary-foreground: var(--color-neutral-50);
-	--secondary: --alpha(var(--color-black) / 4%);
-	--secondary-foreground: var(--color-neutral-800);
-	--muted: --alpha(var(--color-black) / 4%);
-	--muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
-	--accent: --alpha(var(--color-black) / 4%);
-	--accent-foreground: var(--color-neutral-800);
-	--destructive: var(--color-red-500);
-	--destructive-foreground: var(--color-red-700);
-	--info: var(--color-blue-500);
-	--info-foreground: var(--color-blue-700);
-	--success: var(--color-emerald-500);
-	--success-foreground: var(--color-emerald-700);
-	--warning: var(--color-amber-500);
-	--warning-foreground: var(--color-amber-700);
-	--border: --alpha(var(--color-black) / 8%);
-	--input: --alpha(var(--color-black) / 10%);
-	--ring: var(--color-neutral-400);
-	--sidebar: var(--color-neutral-50);
-	--sidebar-foreground: color-mix(in srgb, var(--color-neutral-800) 64%, var(--sidebar));
-	--sidebar-primary: var(--color-neutral-800);
-	--sidebar-primary-foreground: var(--color-neutral-50);
-	--sidebar-accent: --alpha(var(--color-black) / 4%);
-	--sidebar-accent-foreground: var(--color-neutral-800);
-	--sidebar-border: --alpha(var(--color-black) / 6%);
-	--sidebar-ring: var(--color-neutral-400);
-}
+	/* Neutros: papel, superficies, bordes y tinta */
+	--aulara-canvas: oklch(97% 0.004 90);
+	--aulara-surface: oklch(100% 0 0);
+	--aulara-sunken: oklch(95% 0.007 90);
+	--aulara-border: oklch(91% 0.01 90);
+	--aulara-border-strong: oklch(85% 0.013 86);
+	--aulara-ink: oklch(21% 0.004 104);
+	--aulara-ink-2: oklch(39% 0.008 97);
+	--aulara-ink-3: oklch(53% 0.011 95);
+	--aulara-ink-4: oklch(68% 0.013 90);
 
-.dark {
-	--background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
-	--foreground: var(--color-neutral-100);
-	--card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-	--card-foreground: var(--color-neutral-100);
-	--popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-	--popover-foreground: var(--color-neutral-100);
-	--primary: var(--color-neutral-100);
-	--primary-foreground: var(--color-neutral-800);
-	--secondary: --alpha(var(--color-white) / 4%);
-	--secondary-foreground: var(--color-neutral-100);
-	--muted: --alpha(var(--color-white) / 4%);
-	--muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-	--accent: --alpha(var(--color-white) / 4%);
-	--accent-foreground: var(--color-neutral-100);
-	--destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-	--destructive-foreground: var(--color-red-400);
-	--info: var(--color-blue-500);
-	--info-foreground: var(--color-blue-400);
-	--success: var(--color-emerald-500);
-	--success-foreground: var(--color-emerald-400);
-	--warning: var(--color-amber-500);
-	--warning-foreground: var(--color-amber-400);
-	--border: --alpha(var(--color-white) / 6%);
-	--input: --alpha(var(--color-white) / 8%);
-	--ring: var(--color-neutral-500);
-	--sidebar: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
-	--sidebar-foreground: color-mix(in srgb, var(--color-neutral-100) 64%, var(--sidebar));
-	--sidebar-primary: var(--color-neutral-100);
-	--sidebar-primary-foreground: var(--color-neutral-800);
-	--sidebar-accent: --alpha(var(--color-white) / 4%);
-	--sidebar-accent-foreground: var(--color-neutral-100);
-	--sidebar-border: --alpha(var(--color-white) / 5%);
-	--sidebar-ring: var(--color-neutral-400);
+	/* Acento: verde Aulara */
+	--aulara-accent: oklch(44% 0.064 189);
+	--aulara-accent-hover:oklch(40% 0.059 190) ;
+	--aulara-accent-pressed:oklch(35% 0.051 188) ;
+	--aulara-accent-border:oklch(88% 0.024 187) ;
+	--aulara-accent-tint: oklch(96% 0.009 186);
+
+	/* Semánticos: solo estados de dinero */
+	--aulara-paid: oklch(53% 0.098 159);
+	--aulara-paid-tint:oklch(95% 0.013 157) ;
+	--aulara-due-soon:oklch(55% 0.111 75) ;
+	--aulara-due-soon-tint: oklch(96% 0.027 84);
+	--aulara-overdue: oklch(52% 0.158 30);
+	--aulara-overdue-tint:oklch(95% 0.017 31) ;
+	--aulara-neutral: oklch(53% 0.011 95);
+	--aulara-neutral-tint:oklch(95% 0.007 90) ;
+
+	/* Tokens compatibles con shadcn */
+	--radius: 8px;
+	--background: var(--aulara-canvas);
+	--foreground: var(--aulara-ink);
+	--card: var(--aulara-surface);
+	--card-foreground: var(--aulara-ink);
+	--popover: var(--aulara-surface);
+	--popover-foreground: var(--aulara-ink);
+	--primary: var(--aulara-accent);
+	--primary-foreground: var(--aulara-surface);
+	--secondary: var(--aulara-sunken);
+	--secondary-foreground: var(--aulara-ink-2);
+	--muted: var(--aulara-sunken);
+	--muted-foreground: var(--aulara-ink-3);
+	--accent: var(--aulara-accent-tint);
+	--accent-foreground: var(--aulara-accent);
+	--destructive: var(--aulara-overdue);
+	--destructive-foreground: var(--aulara-overdue);
+	--info: var(--aulara-accent);
+	--info-foreground: var(--aulara-accent);
+	--success: var(--aulara-paid);
+	--success-foreground: var(--aulara-paid);
+	--warning: var(--aulara-due-soon);
+	--warning-foreground: var(--aulara-due-soon);
+	--border: var(--aulara-border);
+	--input: var(--aulara-border-strong);
+	--ring: var(--aulara-accent);
+	--sidebar: var(--aulara-surface);
+	--sidebar-foreground: var(--aulara-ink-2);
+	--sidebar-primary: var(--aulara-accent);
+	--sidebar-primary-foreground: var(--aulara-surface);
+	--sidebar-accent: var(--aulara-accent-tint);
+	--sidebar-accent-foreground: var(--aulara-accent);
+	--sidebar-border: var(--aulara-border);
+	--sidebar-ring: var(--aulara-accent);
 }
 
 @layer base {
