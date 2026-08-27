@@ -17,8 +17,7 @@
 		"lint": "biome check --write",
 		"format": "biome format --write",
 		"check-types": "tsc -p tsconfig.json --noEmit",
-		"auth:generate": "auth generate --config=src/server.ts --output=../db/src/schema/auth.generated.ts",
-		"auth:create-admin": "tsx scripts/create-admin.ts"
+		"auth:generate": "auth generate --config=src/server.ts --output=../db/src/schema/auth.generated.ts"
 	},
 	"dependencies": {
 		"@aulara/db": "workspace:*",
@@ -31,7 +30,6 @@
 		"@biomejs/biome": "2.5.10",
 		"@types/node": "26.3.0",
 		"auth": "1.7.2",
-		"tsx": "^4.20.3",
 		"typescript": "7.0.2"
 	},
 	"packageManager": "pnpm@11.24.0"

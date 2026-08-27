@@ -44,5 +44,3 @@ yarn-error.log*
 # Agents
 .agents/*
 docs/*
-!docs/
-!docs/auth-and-database.md

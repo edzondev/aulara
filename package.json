@@ -8,7 +8,6 @@
 		"format": "turbo run format",
 		"check-types": "turbo run check-types",
 		"auth:generate": "pnpm --filter=@aulara/auth auth:generate",
-		"auth:create-admin": "pnpm --filter=@aulara/auth auth:create-admin",
 		"db:check": "pnpm --filter=@aulara/db db:check",
 		"db:generate": "pnpm --filter=@aulara/db db:generate",
 		"db:migrate": "pnpm --filter=@aulara/db db:migrate",
