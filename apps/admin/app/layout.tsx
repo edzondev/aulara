@@ -25,7 +25,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
 			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
 		>
 			<body className="relative">
-				<div className="isolate relative flex min-h-svh flex-col">{children}</div>
+				<div className="isolate relative flex min-h-svh flex-col">
+					{children}
+				</div>
 			</body>
 		</html>
 	);

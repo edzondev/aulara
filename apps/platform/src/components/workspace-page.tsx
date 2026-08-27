@@ -26,7 +26,7 @@ export function WorkspacePage({
 								{title}
 							</h1>
 							{titleAddon}
-							</div>
+						</div>
 						<p className="mt-0.5 text-[13px] leading-5 text-[var(--aulara-ink-3)]">
 							{context}
 						</p>
@@ -36,7 +36,7 @@ export function WorkspacePage({
 							{secondaryAction && (
 								<button
 									className="h-8 rounded-md border border-[var(--aulara-border-strong)] bg-[var(--aulara-surface)] px-3 text-[13px] font-medium text-[var(--aulara-ink-2)] shadow-[0_1px_1px_oklch(20%_0.01_90/0.03)] outline-none transition-colors hover:bg-[var(--aulara-sunken)] focus-visible:ring-2 focus-visible:ring-[var(--aulara-accent)]"
-								type="button"
+									type="button"
 								>
 									{secondaryAction}
 								</button>

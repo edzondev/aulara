@@ -1,7 +1,6 @@
 "use client";
 
 import { SidebarProvider, useSidebar } from "@aulara/ui/components/sidebar";
-import { usePathname } from "next/navigation";
 import { type PropsWithChildren, useState } from "react";
 import { AppSidebar } from "./app-sidebar";
 import { MenuIcon } from "./shell-icons";
@@ -15,7 +14,6 @@ export function PlatformShell({
 	children = null,
 	initialSidebarPreference,
 }: PlatformShellProps) {
-	const pathname = usePathname() ?? "/inicio";
 	const isWideSidebar = useWideSidebar();
 	const [sidebarPreference, setSidebarPreference] = useState(
 		initialSidebarPreference,
@@ -30,7 +28,7 @@ export function PlatformShell({
 				onOpenChange={setSidebarPreference}
 				open={sidebarOpen}
 			>
-				<AppSidebar key={pathname} pathname={pathname} />
+				<AppSidebar />
 				<MobileRail />
 				<main className="min-w-0 flex-1 bg-[var(--aulara-canvas)] min-[720px]:max-[1023px]:ml-14">
 					{children}

@@ -34,11 +34,41 @@ describe("PlatformShell", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: /Rosa Meléndez/i }));
 
-		expect(screen.getByText("Mi cuenta")).toBeVisible();
-		expect(screen.getByText("Preferencias de densidad")).toBeVisible();
+		expect(
+			screen.getByRole("menuitem", { name: "Mi cuenta" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("menuitem", { name: "Preferencias de densidad" }),
+		).toBeInTheDocument();
 		expect(
 			screen.getByRole("menuitem", { name: "Cerrar sesión" }),
-		).toBeVisible();
+		).toBeInTheDocument();
+	});
+
+	it("supports keyboard navigation inside global utility menus", () => {
+		render(
+			<PlatformShell initialSidebarPreference={null}>
+				<div>Área de trabajo</div>
+			</PlatformShell>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: /Colegio San Marcelo, Año escolar 2026/i,
+			}),
+		);
+
+		const currentCampus = screen.getByRole("menuitemradio", {
+			name: /Sede Central/i,
+		});
+		const nextCampus = screen.getByRole("menuitemradio", {
+			name: /Sede Los Álamos/i,
+		});
+
+		currentCampus.focus();
+		fireEvent.keyDown(currentCampus, { key: "ArrowDown" });
+
+		expect(nextCampus).toHaveFocus();
 	});
 
 	it("does not subscribe the shell to window resize events", () => {
