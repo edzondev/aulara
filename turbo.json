@@ -1,6 +1,12 @@
 {
 	"$schema": "https://turborepo.dev/schema.json",
 	"ui": "tui",
+	"globalEnv": [
+		"DATABASE_URL",
+		"TEST_DATABASE_URL",
+		"BETTER_AUTH_*",
+		"NEXT_PUBLIC_BETTER_AUTH_URL"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],

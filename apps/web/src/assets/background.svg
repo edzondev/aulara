@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1024" fill="none">
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	width="1440"
+	height="1024"
+	fill="none"
+	role="img"
+>
+	<title>Decorative background</title>
 	<path
 		fill="url(#a)"
 		fill-rule="evenodd"
