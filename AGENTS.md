@@ -38,5 +38,6 @@ pnpm + Turborepo monorepo. Package manager is pinned to `pnpm@11.24.0`; never us
 
 ## Testing
 
-- Only `apps/platform` has tests: **Vitest + Testing Library** (jsdom, setup in `src/test/setup.ts`). Vitest is **not** wired into turbo root scripts — run from `apps/platform`: `pnpm test` (single run) or `pnpm test:watch`.
+- Only `apps/platform` has tests: **Vitest + Testing Library** (jsdom, setup in `src/test/setup.ts`). Vitest is **not** wired into turbo root scripts.
+- Run tests from the **repo root**: `pnpm --filter=@aulara/platform test` (single run) or `pnpm --filter=@aulara/platform test:watch`. Running `pnpm test` from inside `apps/platform` fails: pnpm v11's deps-status check reads the app-local `pnpm-workspace.yaml` (which has no `packages:` key) and cannot resolve `@aulara/ui@workspace:*`.
 - Tests are colocated as `*.test.ts(x)` next to the source. Per project convention, write a failing test before implementing a production function.
