@@ -26,6 +26,9 @@ importers:
       '@aulara/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@aulara/env':
+        specifier: workspace:*
+        version: link:../../packages/env
       '@aulara/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@aulara/auth": "workspace:*",
 		"@aulara/core": "workspace:*",
+		"@aulara/env": "workspace:*",
 		"@aulara/ui": "workspace:*",
 		"next": "16.3.2",
 		"react": "19.2.8",

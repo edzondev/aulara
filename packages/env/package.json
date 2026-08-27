@@ -5,7 +5,11 @@
 	"type": "module",
 	"exports": {
 		"./auth": "./src/auth.ts",
-		"./database": "./src/database.ts"
+		"./database": "./src/database.ts",
+		"./load-env": {
+			"types": "./src/load-env.d.ts",
+			"default": "./src/load-env.cjs"
+		}
 	},
 	"scripts": {
 		"lint": "biome check --write",
