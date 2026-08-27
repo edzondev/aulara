@@ -1,0 +1,38 @@
+{
+	"name": "@aulara/auth",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./server": "./src/server.ts",
+		"./client": "./src/client.ts",
+		"./cors": "./src/cors.ts",
+		"./errors": "./src/errors.ts",
+		"./guards": "./src/guards.ts",
+		"./permissions": "./src/permissions.ts",
+		"./school-context": "./src/school-context.ts",
+		"./types": "./src/types.ts"
+	},
+	"scripts": {
+		"lint": "biome check --write",
+		"format": "biome format --write",
+		"check-types": "tsc -p tsconfig.json --noEmit",
+		"auth:generate": "auth generate --config=src/server.ts --output=../db/src/schema/auth.generated.ts",
+		"auth:create-admin": "tsx scripts/create-admin.ts"
+	},
+	"dependencies": {
+		"@aulara/db": "workspace:*",
+		"@aulara/env": "workspace:*",
+		"@better-auth/drizzle-adapter": "1.7.2",
+		"better-auth": "1.7.2"
+	},
+	"devDependencies": {
+		"@aulara/ts-config": "workspace:*",
+		"@biomejs/biome": "2.5.10",
+		"@types/node": "26.3.0",
+		"auth": "1.7.2",
+		"tsx": "^4.20.3",
+		"typescript": "7.0.2"
+	},
+	"packageManager": "pnpm@11.24.0"
+}

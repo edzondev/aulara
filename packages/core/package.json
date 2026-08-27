@@ -1,0 +1,31 @@
+{
+	"name": "@aulara/core",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./errors": "./src/errors.ts",
+		"./schools": "./src/schools/index.ts",
+		"./billing": "./src/billing/index.ts",
+		"./tuition": "./src/tuition/index.ts",
+		"./payments": "./src/payments/index.ts"
+	},
+	"scripts": {
+		"lint": "biome check --write",
+		"format": "biome format --write",
+		"check-types": "tsc -p tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@aulara/auth": "workspace:*",
+		"@aulara/db": "workspace:*",
+		"better-auth": "1.7.2",
+		"drizzle-orm": "0.45.2"
+	},
+	"devDependencies": {
+		"@aulara/ts-config": "workspace:*",
+		"@biomejs/biome": "2.5.10",
+		"@types/node": "26.3.0",
+		"typescript": "7.0.2"
+	},
+	"packageManager": "pnpm@11.24.0"
+}
