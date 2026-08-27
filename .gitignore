@@ -4,6 +4,10 @@
 node_modules
 .pnp
 .pnp.js
+.pnpm-store/
+
+# Git worktrees
+.worktrees/
 
 # Local env files
 .env

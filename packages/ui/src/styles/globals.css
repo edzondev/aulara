@@ -128,3 +128,30 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+	[data-auto-sidebar] [data-slot="sidebar-gap"],
+	[data-auto-sidebar] [data-slot="sidebar-container"] {
+		width: var(--sidebar-width-icon);
+	}
+
+	[data-auto-sidebar] [data-shell-copy],
+	[data-auto-sidebar] [data-slot="sidebar-menu-badge"] {
+		display: none;
+	}
+
+	[data-auto-sidebar] [data-shell-utility],
+	[data-auto-sidebar] [data-slot="sidebar-menu-button"] {
+		height: 2rem;
+		width: 2rem;
+		padding: 0.5rem;
+	}
+
+	[data-auto-sidebar] [data-shell-utility] {
+		justify-content: center;
+	}
+
+	[data-auto-sidebar] [data-slot="sidebar-content"] {
+		overflow: hidden;
+	}
+}
