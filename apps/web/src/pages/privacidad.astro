@@ -1,0 +1,142 @@
+---
+import { site } from "../content/site";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+	legal
+	title="Política de privacidad"
+	description={`Cómo ${site.name} trata los datos personales de la lista de espera.`}
+>
+	<article class="mx-auto max-w-2xl px-5 py-16 sm:px-8">
+		<p class="text-xs font-medium tracking-[0.18em] text-ink-4 uppercase">
+			Legal
+		</p>
+		<h1 class="font-display mt-3 text-4xl text-ink">Política de privacidad</h1>
+		<p class="mt-2 text-sm text-ink-3">
+			Vigente desde el {site.privacyUpdatedLabel}. Versión
+			{site.privacyPolicyVersion}.
+		</p>
+
+		<div class="mt-10 space-y-8 text-[1.05rem] leading-relaxed text-ink-2">
+			<p>
+				Esta política explica cómo se tratan los datos personales cuando usas
+				{" "}
+				<a
+					class="text-accent underline-offset-2 hover:underline"
+					href={site.url}
+					>{site.url}</a
+				>{" "}
+				y te anotas en la lista de espera. No es el contrato del software{" "}
+				{site.name}: el producto para colegios aún no está abierto.
+			</p>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Quién es el responsable</h2>
+				<p>
+					El responsable del tratamiento es{" "}
+					<strong class="font-medium text-ink">{site.operatorFullName}</strong>,
+					persona natural que opera {site.name}, con sede en {site.city}.
+				</p>
+				<p>
+					Para ejercer tus derechos o hacer una consulta:{" "}
+					<a
+						class="text-accent underline-offset-2 hover:underline"
+						href={`mailto:${site.privacyEmail}`}
+						>{site.privacyEmail}</a
+					>.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Qué datos recogemos</h2>
+				<ul class="list-disc space-y-1 pl-5">
+					<li>Nombre del colegio.</li>
+					<li>Correo electrónico de contacto.</li>
+					<li>Cargo (director/a, dueño/a o socio, administración u otro).</li>
+					<li>
+						Fecha y versión de la política que aceptaste, y la dirección IP si
+						el servidor la recibe, para poder demostrar el consentimiento.
+					</li>
+				</ul>
+				<p>
+					No pedimos teléfono, documentos de identidad, ni datos de alumnos,
+					familias o menores. Este formulario no es un registro escolar.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Para qué y con qué base</h2>
+				<p>
+					Finalidad única: inscribirte en la lista de espera y contactarte por
+					correo sobre el lanzamiento o la apertura de {site.name} para
+					instituciones.
+				</p>
+				<p>
+					La base del tratamiento es tu consentimiento, que das al marcar la
+					casilla y enviar el formulario. No usamos estos datos para publicidad
+					de terceros, ni para newsletters distintas de ese aviso, ni los
+					vendemos.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Dónde se guardan</h2>
+				<p>
+					Los datos se almacenan en una base PostgreSQL (Neon) y el sitio se
+					sirve desde la infraestructura de despliegue (por ejemplo Vercel).
+					Esos proveedores pueden estar fuera del Perú. Al aceptar esta
+					política, también aceptas esa transferencia, necesaria para operar el
+					sitio y la lista.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Cuánto tiempo</h2>
+				<p>
+					Conservamos el registro hasta que pidas la baja, o como máximo{" "}
+					{site.waitlistRetentionYears}
+					años si {site.name} no llega a abrirse para instituciones. Después se
+					elimina.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Tus derechos</h2>
+				<p>
+					Puedes pedir acceso, rectificación, cancelación, oposición y
+					portabilidad de tus datos (ARCO+P). Escríbenos a{" "}
+					<a
+						class="text-accent underline-offset-2 hover:underline"
+						href={`mailto:${site.privacyEmail}`}
+						>{site.privacyEmail}</a
+					>. Responderemos lo antes posible, y en cualquier caso dentro de los
+					plazos que fije la norma aplicable.
+				</p>
+				<p>
+					Si estás en Perú, también puedes acudir a la Autoridad Nacional de
+					Protección de Datos Personales (ANPD) del Ministerio de Justicia. En
+					otros países de la región, a la autoridad local de protección de
+					datos.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Cookies</h2>
+				<p>
+					Esta web no usa cookies de analítica ni de publicidad. Solo lo
+					estrictamente necesario para enviar el formulario y mostrar el sitio.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Cambios</h2>
+				<p>
+					Si cambia esta política de forma relevante, actualizaremos la fecha y
+					la versión en esta página. El consentimiento ya dado sigue valiendo
+					para la finalidad descrita, salvo que el cambio exija uno nuevo.
+				</p>
+			</section>
+		</div>
+	</article>
+</Layout>

@@ -1,0 +1,27 @@
+---
+import { site } from "../content/site";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+	title="Quedaste en la lista"
+	description={`Tu colegio quedó anotado en la lista de espera de ${site.name}.`}
+>
+	<section class="mx-auto max-w-2xl px-5 py-24 sm:px-8">
+		<p class="text-xs font-medium tracking-[0.18em] text-accent uppercase">
+			Lista de espera
+		</p>
+		<h1 class="font-display mt-4 text-4xl text-ink sm:text-5xl">
+			Quedaste en la lista.
+		</h1>
+		<p class="mt-5 text-lg leading-relaxed text-ink-2">
+			Te escribiremos a ese correo cuando {site.name} abra para instituciones.
+			No hay que hacer nada más.
+		</p>
+		<p class="mt-8">
+			<a href="/" class="text-sm text-accent underline-offset-4 hover:underline"
+				>Volver al inicio</a
+			>
+		</p>
+	</section>
+</Layout>

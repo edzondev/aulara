@@ -1,0 +1,162 @@
+---
+import { site } from "../content/site";
+import { waitlistRoleLabels, waitlistRoles } from "../lib/waitlist";
+
+const notice = Astro.url.searchParams.get("waitlist");
+---
+
+<form id="waitlist-form" class="grid gap-4" method="POST" action="/espera">
+	{notice === "invalid" && (
+		<p class="rounded-md bg-overdue-tint px-3 py-2 text-sm text-overdue" role="alert">
+			Revisa los campos e inténtalo de nuevo.
+		</p>
+	)}
+	{notice === "error" && (
+		<p class="rounded-md bg-overdue-tint px-3 py-2 text-sm text-overdue" role="alert">
+			No se pudo guardar. Inténtalo de nuevo.
+		</p>
+	)}
+
+	<div class="grid gap-1.5">
+		<label for="institutionName" class="text-sm font-medium text-ink-2"
+			>Nombre del colegio</label
+		>
+		<input
+			id="institutionName"
+			name="institutionName"
+			type="text"
+			required
+			minlength="2"
+			maxlength="120"
+			autocomplete="organization"
+			class="h-11 rounded-md border border-border-strong bg-surface px-3 text-ink outline-none ring-accent/0 transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+		>
+		<p data-error-for="institutionName" class="hidden text-sm text-overdue"></p>
+	</div>
+
+	<div class="grid gap-1.5">
+		<label for="email" class="text-sm font-medium text-ink-2">Correo</label>
+		<input
+			id="email"
+			name="email"
+			type="email"
+			required
+			autocomplete="email"
+			class="h-11 rounded-md border border-border-strong bg-surface px-3 text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+		>
+		<p data-error-for="email" class="hidden text-sm text-overdue"></p>
+	</div>
+
+	<div class="grid gap-1.5">
+		<label for="role" class="text-sm font-medium text-ink-2">Cargo</label>
+		<select
+			id="role"
+			name="role"
+			required
+			class="h-11 rounded-md border border-border-strong bg-surface px-3 text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+		>
+			<option value="" disabled selected>Elige una opción</option>
+			{waitlistRoles.map((role) => (
+				<option value={role}>{waitlistRoleLabels[role]}</option>
+			))}
+		</select>
+		<p data-error-for="role" class="hidden text-sm text-overdue"></p>
+	</div>
+
+	<label class="sr-only" aria-hidden="true">
+		Sitio web
+		<input type="text" name="companyWebsite" tabindex="-1" autocomplete="off">
+	</label>
+
+	<div class="grid gap-1.5">
+		<label class="flex items-start gap-2.5 text-sm leading-5 text-ink-2">
+			<input
+				id="privacyAccepted"
+				name="privacyAccepted"
+				type="checkbox"
+				value="on"
+				required
+				class="mt-0.5 size-4 accent-accent"
+			>
+			<span>
+				He leído y acepto la{" "}
+				<a
+					class="text-accent underline-offset-2 hover:underline"
+					href="/privacidad"
+					>política de privacidad</a
+				>. Solo usaremos estos datos para avisarte del lanzamiento.
+			</span>
+		</label>
+		<p data-error-for="privacyAccepted" class="hidden text-sm text-overdue"></p>
+	</div>
+
+	<button
+		type="submit"
+		class="mt-1 h-11 rounded-md bg-accent text-sm font-medium text-surface transition-colors hover:bg-accent-hover disabled:opacity-60"
+	>
+		Anotar mi colegio
+	</button>
+	<p class="text-xs text-ink-4">
+		Al enviar, {site.name} trata tu correo según la política vigente ({site.privacyPolicyVersion}).
+	</p>
+</form>
+
+<script>
+import { actions } from "astro:actions";
+import { formDataToWaitlistRaw, parseWaitlistFields } from "../lib/waitlist";
+
+const form = document.getElementById("waitlist-form");
+if (form instanceof HTMLFormElement) {
+	const button = form.querySelector("button[type='submit']");
+	const errorNodes = form.querySelectorAll("[data-error-for]");
+
+	function clearErrors() {
+		for (const node of errorNodes) {
+			if (node instanceof HTMLElement) {
+				node.textContent = "";
+				node.classList.add("hidden");
+			}
+		}
+	}
+
+	function showError(field: string, message: string) {
+		const node = form?.querySelector(`[data-error-for="${field}"]`);
+		if (node instanceof HTMLElement) {
+			node.textContent = message;
+			node.classList.remove("hidden");
+		}
+	}
+
+	form.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		clearErrors();
+
+		const formData = new FormData(form);
+		const parsed = parseWaitlistFields(formDataToWaitlistRaw(formData));
+		if (!parsed.ok) {
+			for (const [field, messages] of Object.entries(parsed.fields)) {
+				const message = messages?.[0];
+				if (message) showError(field, message);
+			}
+			return;
+		}
+
+		if (button instanceof HTMLButtonElement) {
+			button.disabled = true;
+		}
+
+		const { error } = await actions.joinWaitlist(formData);
+
+		if (!error) {
+			window.location.assign("/gracias");
+			return;
+		}
+
+		showError("privacyAccepted", "No se pudo guardar. Inténtalo de nuevo.");
+
+		if (button instanceof HTMLButtonElement) {
+			button.disabled = false;
+		}
+	});
+}
+</script>

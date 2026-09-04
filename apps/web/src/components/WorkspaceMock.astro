@@ -1,0 +1,153 @@
+---
+const rows = [
+	{
+		name: "Lucía Mendoza",
+		grade: "5.° A",
+		due: "05 sep",
+		amount: "S/ 480",
+		status: "Vencido",
+		tone: "overdue",
+	},
+	{
+		name: "Mateo Rivas",
+		grade: "3.° B",
+		due: "12 sep",
+		amount: "S/ 480",
+		status: "Por vencer",
+		tone: "due",
+	},
+	{
+		name: "Valentina Soto",
+		grade: "1.° A",
+		due: "12 sep",
+		amount: "S/ 420",
+		status: "Pagado",
+		tone: "paid",
+	},
+	{
+		name: "Joaquín Peña",
+		grade: "4.° A",
+		due: "18 sep",
+		amount: "S/ 480",
+		status: "Pendiente",
+		tone: "neutral",
+	},
+	{
+		name: "Amanda Cruz",
+		grade: "2.° B",
+		due: "18 sep",
+		amount: "S/ 420",
+		status: "Pagado",
+		tone: "paid",
+	},
+] as const;
+
+const nav = [
+	{ label: "Inicio", active: false },
+	{ label: "Alumnos", active: false },
+	{ label: "Cobranza", active: true },
+	{ label: "Pagos", active: false },
+	{ label: "Configuración", active: false },
+] as const;
+
+const toneClass: Record<(typeof rows)[number]["tone"], string> = {
+	overdue: "bg-overdue-tint text-overdue",
+	due: "bg-due-tint text-due",
+	paid: "bg-paid-tint text-paid",
+	neutral: "bg-sunken text-ink-3",
+};
+---
+
+<figure class="relative">
+	<div
+		class="pointer-events-none overflow-hidden rounded-xl border border-border-strong/70 bg-surface shadow-[0_24px_80px_-32px_oklch(21%_0.004_104/0.35)]"
+		aria-hidden="true"
+	>
+		<div class="flex min-h-88">
+			<aside
+				class="hidden w-54 shrink-0 flex-col border-r border-border bg-surface p-3 sm:flex"
+			>
+				<div class="px-2 pb-4 pt-1">
+					<p class="text-[11px] font-medium tracking-wide text-ink-4 uppercase">
+						Colegio
+					</p>
+					<p class="text-[13px] font-medium text-ink">San Marcello</p>
+					<p class="text-[12px] text-ink-3">Año 2026</p>
+				</div>
+				<nav class="flex flex-1 flex-col gap-0.5">
+					{nav.map((item) => (
+						<div
+							class:list={[
+								"flex h-8 items-center rounded-md px-2 text-[13px]",
+								item.active ? "font-medium text-ink" : "text-ink-2",
+							]}
+						>
+							<span
+								class:list={[
+									"mr-2 inline-block size-1.5 rounded-full",
+									item.active ? "bg-accent" : "bg-ink-4",
+								]}
+							></span>
+							{item.label}
+							{item.active && (
+								<span class="ml-auto rounded-full bg-overdue px-1.5 text-[10px] leading-4 text-surface">37</span>
+							)}
+						</div>
+					))}
+				</nav>
+				<div class="mt-auto border-t border-border px-2 pt-3">
+					<p class="text-[12px] text-ink-2">Secretaría</p>
+					<p class="text-[11px] text-ink-4">sanmarcello.edu</p>
+				</div>
+			</aside>
+			<div class="min-w-0 flex-1 bg-canvas p-5 sm:p-6">
+				<div class="mb-4 flex items-end justify-between gap-3">
+					<div>
+						<h3 class="font-display text-[1.35rem] leading-none text-ink">
+							Cobranza
+						</h3>
+						<p class="mt-1 text-[13px] text-ink-3">
+							Septiembre 2026 · 184 obligaciones · 37 vencidas
+						</p>
+					</div>
+					<div class="hidden gap-2 sm:flex">
+						<span
+							class="rounded-md border border-border bg-surface px-2.5 py-1 text-[12px] text-ink-2"
+							>Exportar</span
+						>
+						<span
+							class="rounded-md bg-accent px-2.5 py-1 text-[12px] text-surface"
+							>Registrar pago</span
+						>
+					</div>
+				</div>
+				<table class="w-full border-collapse text-left text-[12.5px]">
+					<thead>
+						<tr class="text-[11px] tracking-wide text-ink-4 uppercase">
+							<th class="pb-2 font-medium">Alumno</th>
+							<th class="hidden pb-2 font-medium sm:table-cell">Grado</th>
+							<th class="pb-2 font-medium">Vence</th>
+							<th class="pb-2 text-right font-medium">Monto</th>
+							<th class="pb-2 pl-3 font-medium">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						{rows.map((row) => (
+							<tr class="border-t border-border">
+								<td class="py-2.5 text-ink">{row.name}</td>
+								<td class="hidden py-2.5 text-ink-2 sm:table-cell">{row.grade}</td>
+								<td class="py-2.5 text-ink-2">{row.due}</td>
+								<td class="py-2.5 text-right tabular-nums text-ink">{row.amount}</td>
+								<td class="py-2.5 pl-3">
+									<span class:list={["inline-block rounded-full px-2 py-0.5 text-[11px]", toneClass[row.tone]]}>
+										{row.status}
+									</span>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</figure>
