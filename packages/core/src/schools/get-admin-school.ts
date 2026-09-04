@@ -38,10 +38,14 @@ export type AdminSchoolDetail = {
 	invitationUrl: string | null;
 };
 
+function isOwnerRole(role: string | null | undefined): boolean {
+	return role?.includes("owner") === true;
+}
+
 function personRoleLabel(
 	role: string | null | undefined,
 ): AdminSchoolPerson["roleLabel"] {
-	if (role === "owner") {
+	if (isOwnerRole(role)) {
 		return "Propietario";
 	}
 
@@ -50,10 +54,6 @@ function personRoleLabel(
 	}
 
 	return "Miembro";
-}
-
-function isOwnerRole(role: string | null | undefined): boolean {
-	return role?.includes("owner") === true;
 }
 
 export async function getAdminSchool(input: {
@@ -86,15 +86,14 @@ export async function getAdminSchool(input: {
 	}
 
 	const pendingOwnerName = readPendingOwnerName(organization.metadata);
-	const pendingInvitations = invitations.filter(
-		(invitation) => invitation.status === "pending",
+	const pendingOwnerInvitations = invitations.filter(
+		(invitation) =>
+			invitation.status === "pending" && isOwnerRole(invitation.role),
 	);
 	const pendingOwnerInvitation =
-		pendingInvitations
-			.filter((invitation) => isOwnerRole(invitation.role))
-			.sort(
-				(left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
-			)[0] ?? null;
+		[...pendingOwnerInvitations].sort(
+			(left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+		)[0] ?? null;
 
 	const people: AdminSchoolPerson[] = [
 		...members.map((member) => ({
@@ -105,9 +104,9 @@ export async function getAdminSchool(input: {
 			statusLabel: "Activo" as const,
 			canResend: false,
 		})),
-		...pendingInvitations.map((invitation) => ({
+		...pendingOwnerInvitations.map((invitation) => ({
 			kind: "invitation" as const,
-			name: isOwnerRole(invitation.role) ? (pendingOwnerName ?? "") : "",
+			name: pendingOwnerName ?? "",
 			email: invitation.email,
 			roleLabel: personRoleLabel(invitation.role),
 			statusLabel: "Invitación enviada" as const,

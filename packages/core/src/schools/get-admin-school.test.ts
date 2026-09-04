@@ -191,14 +191,6 @@ describe("getAdminSchool", () => {
 					statusLabel: "Invitación enviada",
 					canResend: true,
 				},
-				{
-					kind: "invitation",
-					name: "",
-					email: "ana@santaelena.pe",
-					roleLabel: "Miembro",
-					statusLabel: "Invitación enviada",
-					canResend: false,
-				},
 			],
 			invitationUrl: `http://localhost:3000/invitacion/${invitationId}`,
 		});
