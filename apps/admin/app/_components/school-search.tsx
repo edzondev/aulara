@@ -7,22 +7,13 @@ import {
 } from "@aulara/ui/components/input-group";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+	colegiosHref,
+	colegiosHrefDiffers,
+	setPendingColegiosQuery,
+} from "./colegios-href";
 
 const DEBOUNCE_MS = 300;
-
-function colegiosHref(searchParams: URLSearchParams, query: string): string {
-	const next = new URLSearchParams(searchParams.toString());
-	const trimmed = query.trim();
-
-	if (trimmed) {
-		next.set("q", trimmed);
-	} else {
-		next.delete("q");
-	}
-
-	const serialized = next.toString();
-	return serialized ? `/colegios?${serialized}` : "/colegios";
-}
 
 export function SchoolSearch() {
 	const router = useRouter();
@@ -32,6 +23,7 @@ export function SchoolSearch() {
 	const debounceRef = useRef<number | undefined>(undefined);
 
 	useEffect(() => {
+		setPendingColegiosQuery(urlQuery);
 		setValue(urlQuery);
 	}, [urlQuery]);
 
@@ -42,11 +34,10 @@ export function SchoolSearch() {
 	}, []);
 
 	function commit(nextValue: string) {
-		const href = colegiosHref(searchParams, nextValue);
-		const current = searchParams.toString();
-		const next = href === "/colegios" ? "" : href.slice("/colegios?".length);
+		setPendingColegiosQuery(nextValue);
+		const href = colegiosHref({ q: nextValue });
 
-		if (next === current) {
+		if (!colegiosHrefDiffers(href)) {
 			return;
 		}
 
@@ -54,6 +45,7 @@ export function SchoolSearch() {
 	}
 
 	function onChange(nextValue: string) {
+		setPendingColegiosQuery(nextValue);
 		setValue(nextValue);
 		window.clearTimeout(debounceRef.current);
 		debounceRef.current = window.setTimeout(() => {
