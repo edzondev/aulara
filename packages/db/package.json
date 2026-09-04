@@ -10,7 +10,8 @@
 		"./queries/schools": "./src/queries/schools.ts",
 		"./queries/billing-contracts": "./src/queries/billing-contracts.ts",
 		"./queries/tuition-rates": "./src/queries/tuition-rates.ts",
-		"./queries/charge-balances": "./src/queries/charge-balances.ts"
+		"./queries/charge-balances": "./src/queries/charge-balances.ts",
+		"./queries/waitlist-leads": "./src/queries/waitlist-leads.ts"
 	},
 	"scripts": {
 		"lint": "biome check --write",

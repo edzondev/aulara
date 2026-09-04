@@ -1,0 +1,91 @@
+---
+import { site } from "../content/site";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+	legal
+	title="Términos de uso"
+	description={`Condiciones de uso del sitio público de ${site.name} y de la lista de espera.`}
+>
+	<article class="mx-auto max-w-2xl px-5 py-16 sm:px-8">
+		<p class="text-xs font-medium tracking-[0.18em] text-ink-4 uppercase">
+			Legal
+		</p>
+		<h1 class="font-display mt-3 text-4xl text-ink">Términos de uso</h1>
+		<p class="mt-2 text-sm text-ink-3">
+			Vigente desde el {site.privacyUpdatedLabel}.
+		</p>
+
+		<div class="mt-10 space-y-8 text-[1.05rem] leading-relaxed text-ink-2">
+			<p>
+				Estos términos regulan el uso del sitio web {site.url}: la presentación
+				de {site.name} y la lista de espera para instituciones. No son un
+				contrato de suscripción, licencia ni servicio escolar. El producto para
+				colegios aún no está abierto al público.
+			</p>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">El sitio</h2>
+				<p>
+					{site.name} {" "}
+					es operada por {site.operatorFullName}, persona natural,{" "}
+					{site.city}. Al usar este sitio aceptas estos términos y la{" "}
+					<a
+						class="text-accent underline-offset-2 hover:underline"
+						href="/privacidad"
+						>política de privacidad</a
+					>.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Lista de espera</h2>
+				<p>
+					Anotarte no garantiza una plaza, una fecha de acceso ni condiciones
+					comerciales. Podemos escribirte cuando el producto esté listo, o no
+					abrir {site.name} para tu institución. Los datos que envías deben ser
+					verdaderos y tú debes estar autorizado a representar al colegio para
+					este fin.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Uso aceptable</h2>
+				<p>
+					No uses el formulario para spam, datos de terceros sin base, ni para
+					intentar saturar el sitio. Nos reservamos el derecho de ignorar o
+					borrar envíos abusivos.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Propiedad intelectual</h2>
+				<p>
+					El nombre {site.name}, el diseño del sitio y los textos son de quien
+					opera{" "}
+					{site.name}. Puedes compartir el enlace; no copies el sitio como si
+					fuera tuyo.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Responsabilidad</h2>
+				<p>
+					El sitio se ofrece “tal cual”. La información sobre el producto puede
+					cambiar. No respondemos por daños derivados de no poder usar la lista
+					de espera o de un retraso en el lanzamiento.
+				</p>
+			</section>
+
+			<section class="space-y-3">
+				<h2 class="font-display text-2xl text-ink">Ley aplicable</h2>
+				<p>
+					Estos términos se interpretan según las leyes del Perú. Cualquier
+					disputa se somete a los tribunales de Lima, sin perjuicio de derechos
+					imperativos que te correspondan en tu país.
+				</p>
+			</section>
+		</div>
+	</article>
+</Layout>

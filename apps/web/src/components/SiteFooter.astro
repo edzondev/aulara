@@ -1,0 +1,26 @@
+---
+import { site } from "../content/site";
+---
+
+<footer class="border-t border-border">
+	<div
+		class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8"
+	>
+		<div>
+			<p class="font-display text-lg text-ink">{site.name}</p>
+			<p class="mt-1 max-w-sm text-sm text-ink-3">
+				Infraestructura operativa para colegios. {site.city}.
+			</p>
+		</div>
+		<nav
+			class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-3"
+			aria-label="Legal"
+		>
+			<a class="hover:text-accent" href="/privacidad">Privacidad</a>
+			<a class="hover:text-accent" href="/terminos">Términos</a>
+			<a class="hover:text-accent" href={`mailto:${site.privacyEmail}`}
+				>{site.privacyEmail}</a
+			>
+		</nav>
+	</div>
+</footer>

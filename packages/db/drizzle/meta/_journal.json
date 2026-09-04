@@ -15,6 +15,13 @@
       "when": 1787857661524,
       "tag": "0001_domain-custom-constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788474859364,
+      "tag": "0002_dear_ozymandias",
+      "breakpoints": true
     }
   ]
 }

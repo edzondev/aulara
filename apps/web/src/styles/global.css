@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@source "../**/*.{astro,html,ts}";
+
+@theme inline {
+	--font-sans: var(--font-red-hat), "Segoe UI", sans-serif;
+	--font-display: var(--font-newsreader), "Palatino Linotype", serif;
+	--color-canvas: var(--aulara-canvas);
+	--color-surface: var(--aulara-surface);
+	--color-sunken: var(--aulara-sunken);
+	--color-border: var(--aulara-border);
+	--color-border-strong: var(--aulara-border-strong);
+	--color-ink: var(--aulara-ink);
+	--color-ink-2: var(--aulara-ink-2);
+	--color-ink-3: var(--aulara-ink-3);
+	--color-ink-4: var(--aulara-ink-4);
+	--color-accent: var(--aulara-accent);
+	--color-accent-hover: var(--aulara-accent-hover);
+	--color-accent-pressed: var(--aulara-accent-pressed);
+	--color-accent-border: var(--aulara-accent-border);
+	--color-accent-tint: var(--aulara-accent-tint);
+	--color-paid: var(--aulara-paid);
+	--color-paid-tint: var(--aulara-paid-tint);
+	--color-due: var(--aulara-due-soon);
+	--color-due-tint: var(--aulara-due-soon-tint);
+	--color-overdue: var(--aulara-overdue);
+	--color-overdue-tint: var(--aulara-overdue-tint);
+}
+
+:root {
+	--aulara-canvas: oklch(97% 0.004 90);
+	--aulara-surface: oklch(100% 0 0);
+	--aulara-sunken: oklch(95% 0.007 90);
+	--aulara-border: oklch(91% 0.01 90);
+	--aulara-border-strong: oklch(85% 0.013 86);
+	--aulara-ink: oklch(21% 0.004 104);
+	--aulara-ink-2: oklch(39% 0.008 97);
+	--aulara-ink-3: oklch(53% 0.011 95);
+	--aulara-ink-4: oklch(68% 0.013 90);
+	--aulara-accent: oklch(44% 0.064 189);
+	--aulara-accent-hover: oklch(40% 0.059 190);
+	--aulara-accent-pressed: oklch(35% 0.051 188);
+	--aulara-accent-border: oklch(88% 0.024 187);
+	--aulara-accent-tint: oklch(96% 0.009 186);
+	--aulara-paid: oklch(53% 0.098 159);
+	--aulara-paid-tint: oklch(95% 0.013 157);
+	--aulara-due-soon: oklch(55% 0.111 75);
+	--aulara-due-soon-tint: oklch(96% 0.027 84);
+	--aulara-overdue: oklch(52% 0.158 30);
+	--aulara-overdue-tint: oklch(95% 0.017 31);
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	background-color: var(--aulara-canvas);
+	color: var(--aulara-ink);
+	font-family: var(--font-sans);
+	font-feature-settings:
+		"ss01" on,
+		"kern" on;
+}
+
+body::before {
+	content: "";
+	pointer-events: none;
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	opacity: 0.035;
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+	background: var(--aulara-accent-tint);
+	color: var(--aulara-accent);
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.rise {
+	animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

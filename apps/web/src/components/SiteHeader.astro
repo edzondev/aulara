@@ -1,0 +1,33 @@
+---
+import { site } from "../content/site";
+
+type Props = { compact?: boolean };
+const { compact = false } = Astro.props;
+---
+
+<header
+	class="sticky top-0 z-40 border-b border-border/80 bg-canvas/80 backdrop-blur-md"
+>
+	<div
+		class="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8"
+	>
+		<a
+			href="/"
+			class="font-display text-[1.35rem] font-semibold tracking-tight text-ink"
+		>
+			{site.name}
+		</a>
+		{compact ? (
+			<a href="/#lista" class="text-sm text-ink-2 underline-offset-4 hover:text-accent hover:underline">
+				Lista de espera
+			</a>
+		) : (
+			<a
+				href="#lista"
+				class="rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-surface transition-colors hover:bg-accent-hover"
+			>
+				Lista de espera
+			</a>
+		)}
+	</div>
+</header>
