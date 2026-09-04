@@ -55,6 +55,9 @@ export const school = pgTable(
 			.$type<SchoolStatus>()
 			.notNull()
 			.default("onboarding"),
+		statusBeforeSuspend: text("status_before_suspend").$type<
+			"onboarding" | "active"
+		>(),
 		createdAt: createdAtColumn(),
 		updatedAt: updatedAtColumn(),
 	},
@@ -75,6 +78,10 @@ export const school = pgTable(
 		),
 		check("school_currency_code_check", currencyCheck(table.currencyCode)),
 		check("school_status_check", statusCheck(table.status, schoolStatuses)),
+		check(
+			"school_status_before_suspend_check",
+			sql`${table.statusBeforeSuspend} is null or ${table.statusBeforeSuspend} in ('onboarding', 'active')`,
+		),
 		index("school_status_idx").on(table.status),
 		index("school_ruc_idx").on(table.ruc),
 		index("school_modular_code_idx").on(table.modularCode),

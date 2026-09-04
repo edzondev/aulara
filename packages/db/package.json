@@ -8,6 +8,7 @@
 		"./schema": "./src/schema/index.ts",
 		"./queries/members": "./src/queries/members.ts",
 		"./queries/schools": "./src/queries/schools.ts",
+		"./queries/invitations": "./src/queries/invitations.ts",
 		"./queries/billing-contracts": "./src/queries/billing-contracts.ts",
 		"./queries/tuition-rates": "./src/queries/tuition-rates.ts",
 		"./queries/charge-balances": "./src/queries/charge-balances.ts",

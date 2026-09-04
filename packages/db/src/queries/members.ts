@@ -28,3 +28,13 @@ export function findOrganizationById(db: AppDatabase, organizationId: string) {
 		where: eq(organization.id, organizationId),
 	});
 }
+
+export function listMembersWithUserByOrganizationId(
+	db: AppDatabase,
+	organizationId: string,
+) {
+	return db.query.member.findMany({
+		where: eq(member.organizationId, organizationId),
+		with: { user: true },
+	});
+}
