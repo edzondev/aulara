@@ -26,10 +26,25 @@ Crear el buzón `privacidad@aulara.app`. Ahí llegan solicitudes ARCO (acceso, r
 
 ## 4. Deploy
 
-- Proyecto en Vercel para `apps-web` (Astro + adapter `@astrojs/vercel`).
-- Variable de producción: `DATABASE_URL`.
-- Dominio `aulara.app` apuntando a Vercel (A/CNAME). HTTPS lo pone Vercel.
-- Tras el primer deploy: enviar el formulario de punta a punta y comprobar la fila en Neon.
+Instalar **siempre desde la raíz del monorepo**, no desde `apps/web`:
+
+```bash
+pnpm install
+pnpm --filter apps-web build
+```
+
+`apps/web` depende de `@aulara/db` y `@aulara/env` (`workspace:*`). Un `pnpm install` solo en esa carpeta no resuelve esos paquetes.
+
+En Vercel:
+
+- Root Directory: vacío (raíz del repo), no `apps/web`.
+- Install: `pnpm install`
+- Build: `pnpm --filter apps-web build`
+- Output: `apps/web/.vercel/output` (adapter `@astrojs/vercel`)
+- Env de producción: `DATABASE_URL` (URL pooled de Neon está bien en runtime)
+- Dominio `aulara.app` (A/CNAME). HTTPS lo pone Vercel.
+
+Tras el primer deploy: enviar el formulario y comprobar la fila en Neon.
 
 Dev local:
 

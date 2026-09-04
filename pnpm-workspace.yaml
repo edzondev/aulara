@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: true
+  sharp: true
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.10.12'
   - '@turbo/darwin-arm64@2.10.12'
