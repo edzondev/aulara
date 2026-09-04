@@ -1,6 +1,4 @@
 import type { AuthorizedSchoolContext } from "@aulara/auth/types";
-import { provisionSchoolTenant } from "@aulara/core/schools";
-import { headers as nextHeaders } from "next/headers";
 
 export type AdminSessionUser = {
 	email: string;
@@ -74,58 +72,6 @@ export async function requireGlobalAdminSession(
 	}
 
 	return session;
-}
-
-export type ProvisionSchoolInput = {
-	ownerUserId: string;
-	organizationName: string;
-	organizationSlug: string;
-	school: {
-		legalName: string;
-		commercialName: string;
-		ruc?: string | null;
-		modularCode?: string | null;
-		contactEmail?: string | null;
-		contactPhone?: string | null;
-		addressLine?: string | null;
-		district?: string | null;
-		province?: string | null;
-		department?: string | null;
-		countryCode?: string;
-		timezone?: string;
-		currencyCode?: string;
-	};
-	initialBillingContract?: {
-		status: "draft" | "confirmed";
-		pricePerActiveStudent: string;
-		minimumMonthlyAmount?: string;
-		currencyCode: string;
-		startsOn: string;
-		endsOn?: string;
-		notes?: string;
-	};
-};
-
-/**
- * Provisions a school tenant as the acting global admin. Authorization is
- * enforced again inside @aulara/core via the session headers; the forwarded
- * cookie is what validates the admin, never a browser-provided id.
- */
-export async function provisionSchool(
-	input: ProvisionSchoolInput,
-): Promise<Awaited<ReturnType<typeof provisionSchoolTenant>>> {
-	const requestHeaders = await nextHeaders();
-
-	await requireGlobalAdminSession(requestHeaders);
-
-	return provisionSchoolTenant({
-		headers: requestHeaders,
-		ownerUserId: input.ownerUserId,
-		organizationName: input.organizationName,
-		organizationSlug: input.organizationSlug,
-		school: input.school,
-		initialBillingContract: input.initialBillingContract,
-	});
 }
 
 export type { AuthorizedSchoolContext };
