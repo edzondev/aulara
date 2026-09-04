@@ -153,3 +153,21 @@ export async function requireActiveSchool(
 
 	return context;
 }
+
+const workspaceStatuses = new Set(["onboarding", "active"]);
+
+export async function requireSchoolWorkspace(
+	headers: Headers,
+): Promise<AuthorizedSchoolContext> {
+	const context = await resolveActiveSchoolContext(headers);
+
+	if (!workspaceStatuses.has(context.school.status)) {
+		throw new AuthContextError(
+			authContextErrorCodes.schoolNotOperational,
+			"The active school is not operational",
+			403,
+		);
+	}
+
+	return context;
+}
