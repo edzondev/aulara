@@ -1,7 +1,10 @@
 import { ownerInvitationExpiresInSeconds } from "@aulara/auth/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainError } from "../errors.ts";
-import { writePendingOwnerName } from "./organization-metadata.ts";
+import {
+	readPendingOwnerName,
+	writePendingOwnerName,
+} from "./organization-metadata.ts";
 import { provisionSchoolTenant } from "./provision-school.ts";
 
 const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
@@ -14,6 +17,7 @@ const createMemberMock = vi.hoisted(() => vi.fn());
 const findOrganizationBySlugMock = vi.hoisted(() => vi.fn());
 const findMemberByEmailMock = vi.hoisted(() => vi.fn());
 const findPendingInvitationMock = vi.hoisted(() => vi.fn());
+const findPendingOwnerInvitationMock = vi.hoisted(() => vi.fn());
 const getAuthEnvironmentMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@aulara/auth/guards", () => ({
@@ -34,6 +38,10 @@ vi.mock("@aulara/db/client", () => ({
 
 vi.mock("@aulara/db/queries/schools", () => ({
 	findSchoolByOrganizationId: findSchoolByOrganizationIdMock,
+}));
+
+vi.mock("@aulara/db/queries/invitations", () => ({
+	findPendingOwnerInvitation: findPendingOwnerInvitationMock,
 }));
 
 vi.mock("@aulara/env/auth", () => ({
@@ -123,10 +131,17 @@ function mockDatabase(existingOrganization: typeof organizationRow | null) {
 		returning: vi.fn().mockResolvedValue([schoolRow]),
 	});
 
+	const select = vi.fn();
+	if (existingOrganization) {
+		select.mockReturnValue(createSelectChain([existingOrganization]));
+	} else {
+		select
+			.mockReturnValueOnce(createSelectChain([]))
+			.mockReturnValue(createSelectChain([organizationRow]));
+	}
+
 	getDatabaseMock.mockReturnValue({
-		select: vi.fn(() =>
-			createSelectChain(existingOrganization ? [existingOrganization] : []),
-		),
+		select,
 		insert: vi.fn(() => ({
 			values: insertValuesMock,
 		})),
@@ -166,10 +181,14 @@ describe("provisionSchoolTenant", () => {
 			findMemberByEmail: findMemberByEmailMock,
 			findPendingInvitation: findPendingInvitationMock,
 		});
-		createOrganizationMock.mockResolvedValue(organizationRow);
+		createOrganizationMock.mockResolvedValue({
+			...organizationRow,
+			metadata: { pendingOwnerName: ownerName },
+		});
 		createInvitationMock.mockResolvedValue(invitationRow);
 		findMemberByEmailMock.mockResolvedValue(null);
 		findPendingInvitationMock.mockResolvedValue([]);
+		findPendingOwnerInvitationMock.mockResolvedValue(null);
 		findSchoolByOrganizationIdMock.mockResolvedValue(null);
 		mockDatabase(null);
 	});
@@ -229,6 +248,13 @@ describe("provisionSchoolTenant", () => {
 		);
 	});
 
+	it("returns Drizzle organization metadata as a string", async () => {
+		const result = await provisionSchoolTenant(provisionInput);
+
+		expect(typeof result.organization.metadata).toBe("string");
+		expect(readPendingOwnerName(result.organization.metadata)).toBe(ownerName);
+	});
+
 	it("throws PROVISIONING_CONFLICT when the slug is empty after slugify", async () => {
 		const error = await expectDomainError(
 			() =>
@@ -260,6 +286,25 @@ describe("provisionSchoolTenant", () => {
 
 		expect(createOrganizationMock).not.toHaveBeenCalled();
 		expect(createInvitationMock).not.toHaveBeenCalled();
+	});
+
+	it("throws PROVISIONING_CONFLICT when the organization already exists with a different owner email", async () => {
+		mockDatabase(organizationRow);
+		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
+		findPendingOwnerInvitationMock.mockResolvedValue(invitationRow);
+
+		await expectDomainError(
+			() =>
+				provisionSchoolTenant({
+					...provisionInput,
+					ownerEmail: "otro@santaelena.pe",
+				}),
+			"PROVISIONING_CONFLICT",
+			409,
+		);
+
+		expect(createInvitationMock).not.toHaveBeenCalled();
+		expect(createMemberMock).not.toHaveBeenCalled();
 	});
 
 	it("reuses an existing pending invitation for the same email", async () => {

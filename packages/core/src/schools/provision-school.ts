@@ -2,6 +2,7 @@ import { ownerInvitationExpiresInSeconds } from "@aulara/auth/constants";
 import { requireGlobalAdmin } from "@aulara/auth/guards";
 import { auth } from "@aulara/auth/server";
 import { getDatabase } from "@aulara/db/client";
+import { findPendingOwnerInvitation } from "@aulara/db/queries/invitations";
 import { findSchoolByOrganizationId } from "@aulara/db/queries/schools";
 import { organization, school } from "@aulara/db/schema";
 import { getAuthEnvironment } from "@aulara/env/auth";
@@ -53,6 +54,18 @@ function toInvitationResult(invitation: {
 		status: invitation.status,
 		expiresAt: invitation.expiresAt,
 	};
+}
+
+async function findOrganizationBySlug(
+	slug: string,
+): Promise<OrganizationRow | undefined> {
+	const [row] = await getDatabase()
+		.select()
+		.from(organization)
+		.where(eq(organization.slug, slug))
+		.limit(1);
+
+	return row;
 }
 
 async function insertSchoolWithReconciliation(
@@ -124,12 +137,7 @@ export async function provisionSchoolTenant(
 	const email = input.ownerEmail.trim().toLowerCase();
 	const organizationName = input.organizationName.trim();
 	const database = getDatabase();
-
-	const [existingOrganization] = await database
-		.select()
-		.from(organization)
-		.where(eq(organization.slug, slug))
-		.limit(1);
+	const existingOrganization = await findOrganizationBySlug(slug);
 
 	const adapter = getOrgAdapter(
 		(await auth.$context) as unknown as OrgAdapterContext,
@@ -139,7 +147,7 @@ export async function provisionSchoolTenant(
 	let resolvedOrganization: OrganizationRow;
 
 	if (!existingOrganization) {
-		resolvedOrganization = (await adapter.createOrganization({
+		await adapter.createOrganization({
 			organization: {
 				name: organizationName,
 				slug,
@@ -148,7 +156,19 @@ export async function provisionSchoolTenant(
 					writePendingOwnerName(null, input.ownerName.trim()),
 				),
 			},
-		})) as OrganizationRow;
+		});
+
+		const createdOrganization = await findOrganizationBySlug(slug);
+
+		if (!createdOrganization) {
+			throw new DomainError(
+				"PROVISIONING_CONFLICT",
+				"The organization could not be created in Better Auth",
+				409,
+			);
+		}
+
+		resolvedOrganization = createdOrganization;
 	} else if (existingOrganization.name !== organizationName) {
 		throw new DomainError(
 			"PROVISIONING_CONFLICT",
@@ -175,6 +195,22 @@ export async function provisionSchoolTenant(
 		throw new DomainError(
 			"PROVISIONING_CONFLICT",
 			"The owner email already belongs to a member of this organization",
+			409,
+		);
+	}
+
+	const pendingOwnerInvitation = await findPendingOwnerInvitation(
+		database,
+		resolvedOrganization.id,
+	);
+
+	if (
+		pendingOwnerInvitation &&
+		pendingOwnerInvitation.email.toLowerCase() !== email
+	) {
+		throw new DomainError(
+			"PROVISIONING_CONFLICT",
+			"The organization already has an owner invitation for a different email",
 			409,
 		);
 	}
