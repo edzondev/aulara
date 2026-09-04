@@ -8,6 +8,11 @@ export {
 	type ProvisionSchoolTenantResult,
 	provisionSchoolTenant,
 } from "./provision-school.ts";
+export { reissueOwnerInvitation } from "./reissue-owner-invitation.ts";
+export {
+	reactivateSchool,
+	suspendSchool,
+} from "./set-school-suspension.ts";
 export { slugifySchoolIdentifier } from "./slug.ts";
 export {
 	parseSchoolStatusFilter,
