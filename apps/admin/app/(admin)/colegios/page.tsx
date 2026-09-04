@@ -5,6 +5,7 @@ import {
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth-server";
+import { CreateSchoolSheet } from "../../_components/create-school-sheet";
 import { SchoolList } from "../../_components/school-list";
 import { SchoolSearch } from "../../_components/school-search";
 import { StatusFilter } from "../../_components/status-filter";
@@ -28,13 +29,14 @@ export default async function ColegiosPage({ searchParams }: Props) {
 
 	return (
 		<main className="w-full max-w-[840px] px-5 pt-[22px] pb-10 text-[var(--aulara-ink)]">
-			<div className="mb-3.5 flex items-baseline gap-3">
+			<div className="mb-3.5 flex items-center gap-3">
 				<h1 className="font-semibold text-[17px] leading-[23px] tracking-[-0.012em]">
 					Colegios
 				</h1>
 				<p className="text-[12.5px] text-[var(--aulara-ink-3)] tabular-nums">
 					{`${schools.length} colegios · ${totalStudents} alumnos en total`}
 				</p>
+				<CreateSchoolSheet />
 			</div>
 			<Suspense
 				fallback={
