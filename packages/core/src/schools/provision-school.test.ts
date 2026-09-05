@@ -258,6 +258,22 @@ describe("provisionSchoolTenant", () => {
 		expect(readPendingOwnerName(result.organization.metadata)).toBe(ownerName);
 	});
 
+	it("throws INVALID_EMAIL when the owner email contains a second @", async () => {
+		const error = await expectDomainError(
+			() =>
+				provisionSchoolTenant({
+					...provisionInput,
+					ownerEmail: "maria@santatest@gmail.com",
+				}),
+			"INVALID_EMAIL",
+			400,
+		);
+
+		expect(error.message).toBe("The owner email is invalid");
+		expect(createOrganizationMock).not.toHaveBeenCalled();
+		expect(createInvitationMock).not.toHaveBeenCalled();
+	});
+
 	it("throws PROVISIONING_CONFLICT when the slug is empty after slugify", async () => {
 		const error = await expectDomainError(
 			() =>

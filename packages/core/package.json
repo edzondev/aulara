@@ -6,6 +6,7 @@
 	"exports": {
 		"./errors": "./src/errors.ts",
 		"./schools": "./src/schools/index.ts",
+		"./schools/email": "./src/schools/email.ts",
 		"./schools/slug": "./src/schools/slug.ts",
 		"./schools/status": "./src/schools/status.ts",
 		"./billing": "./src/billing/index.ts",

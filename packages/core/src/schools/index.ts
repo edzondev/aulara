@@ -1,3 +1,4 @@
+export { isValidEmail } from "./email.ts";
 export {
 	type AdminSchoolDetail,
 	type AdminSchoolPerson,

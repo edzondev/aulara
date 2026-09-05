@@ -1,3 +1,5 @@
+import { isValidEmail } from "@aulara/core/schools/email";
+
 type AuthResult = { error: { message?: string } | null };
 
 export type InviteeAuthClient = {
@@ -17,6 +19,10 @@ export async function authenticateInvitee(
 	client: InviteeAuthClient,
 	input: { email: string; name: string; password: string },
 ): Promise<{ ok: true } | { ok: false; message: string }> {
+	if (!isValidEmail(input.email)) {
+		return { ok: false, message: "El correo no es válido." };
+	}
+
 	const { error: signUpError } = await client.signUp.email({
 		email: input.email,
 		name: input.name,

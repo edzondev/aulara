@@ -1,5 +1,6 @@
 "use client";
 
+import { isValidEmail } from "@aulara/core/schools/email";
 import { Button } from "@aulara/ui/components/button";
 import { Field, FieldLabel } from "@aulara/ui/components/field";
 import { Input } from "@aulara/ui/components/input";
@@ -17,6 +18,12 @@ export function LoginForm() {
 		const password = String(formData.get("password") ?? "");
 
 		setError(null);
+
+		if (!isValidEmail(email)) {
+			setError("El correo no es válido.");
+			return;
+		}
+
 		setPending(true);
 
 		try {

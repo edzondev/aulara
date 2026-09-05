@@ -22,6 +22,22 @@ describe("authenticateInvitee", () => {
 		password: "password12",
 	};
 
+	it("rejects an address with a second @ before calling Better Auth", async () => {
+		const client = clientStub({});
+
+		await expect(
+			authenticateInvitee(client, {
+				...input,
+				email: "maria@santatest@gmail.com",
+			}),
+		).resolves.toEqual({
+			ok: false,
+			message: "El correo no es válido.",
+		});
+		expect(client.signUp.email).not.toHaveBeenCalled();
+		expect(client.signIn.email).not.toHaveBeenCalled();
+	});
+
 	it("signs up a new owner and does not sign in", async () => {
 		const client = clientStub({});
 

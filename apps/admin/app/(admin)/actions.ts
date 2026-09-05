@@ -15,6 +15,10 @@ function publicMessage(error: DomainError, fallback: string): string {
 		return "Ese identificador ya existe o el correo ya es miembro.";
 	}
 
+	if (error.code === "INVALID_EMAIL") {
+		return "El correo no es válido.";
+	}
+
 	if (error.code === "SCHOOL_NOT_FOUND") {
 		return "No se encontró el colegio.";
 	}

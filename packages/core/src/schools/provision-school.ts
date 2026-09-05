@@ -9,6 +9,7 @@ import { getAuthEnvironment } from "@aulara/env/auth";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { eq } from "drizzle-orm";
 import { DomainError, findPostgresErrorCode } from "../errors.ts";
+import { isValidEmail } from "./email.ts";
 import { ownerInvitationUrl } from "./invitation-url.ts";
 import { writePendingOwnerName } from "./organization-metadata.ts";
 import { slugifySchoolIdentifier } from "./slug.ts";
@@ -135,6 +136,11 @@ export async function provisionSchoolTenant(
 	}
 
 	const email = input.ownerEmail.trim().toLowerCase();
+
+	if (!isValidEmail(email)) {
+		throw new DomainError("INVALID_EMAIL", "The owner email is invalid", 400);
+	}
+
 	const organizationName = input.organizationName.trim();
 	const database = getDatabase();
 	const existingOrganization = await findOrganizationBySlug(slug);

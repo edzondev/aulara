@@ -1,5 +1,6 @@
 "use client";
 
+import { isValidEmail } from "@aulara/core/schools/email";
 import { slugifySchoolIdentifier } from "@aulara/core/schools/slug";
 import { Badge } from "@aulara/ui/components/badge";
 import { Button } from "@aulara/ui/components/button";
@@ -28,8 +29,6 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { createSchoolAction } from "@/app/(admin)/actions";
 
-const EMAIL_PATTERN = /.+@.+\..+/;
-
 type SuccessState = {
 	invitationUrl: string;
 	ownerEmail: string;
@@ -55,7 +54,7 @@ export function CreateSchoolSheet() {
 	const canSubmit =
 		name.trim().length > 2 &&
 		slug.trim().length > 1 &&
-		EMAIL_PATTERN.test(ownerEmail.trim()) &&
+		isValidEmail(ownerEmail) &&
 		ownerName.trim().length > 2;
 
 	function reset() {
