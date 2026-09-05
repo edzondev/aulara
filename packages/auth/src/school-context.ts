@@ -129,7 +129,7 @@ export async function resolveActiveSchoolContext(
 
 	if (!school || school.organizationId !== organizationId) {
 		throw new AuthContextError(
-			authContextErrorCodes.schoolNotFound,
+			authContextErrorCodes.activeSchoolNotFound,
 			"The active organization has no school",
 			404,
 		);

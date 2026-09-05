@@ -1,102 +1,61 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listAdminSchools } from "./list-admin-schools.ts";
 
-const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
 const getDatabaseMock = vi.hoisted(() => vi.fn());
-const listSchoolsMock = vi.hoisted(() => vi.fn());
-const countStudentsBySchoolIdMock = vi.hoisted(() => vi.fn());
-const listMembersWithUserByOrganizationIdMock = vi.hoisted(() => vi.fn());
-const listInvitationsByOrganizationIdMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@aulara/auth/guards", () => ({
-	requireGlobalAdmin: requireGlobalAdminMock,
-}));
+const listAdminSchoolSummariesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@aulara/db/client", () => ({
 	getDatabase: getDatabaseMock,
 }));
 
 vi.mock("@aulara/db/queries/schools", () => ({
-	listSchools: listSchoolsMock,
-	countStudentsBySchoolId: countStudentsBySchoolIdMock,
-}));
-
-vi.mock("@aulara/db/queries/members", () => ({
-	listMembersWithUserByOrganizationId: listMembersWithUserByOrganizationIdMock,
-}));
-
-vi.mock("@aulara/db/queries/invitations", () => ({
-	listInvitationsByOrganizationId: listInvitationsByOrganizationIdMock,
+	listAdminSchoolSummaries: listAdminSchoolSummariesMock,
 }));
 
 const admin = {
-	id: "admin-id",
+	id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	email: "jorge@aulara.pe",
 	name: "Jorge",
 	role: "admin" as const,
 };
 
-const schoolId = "school-id";
-const organizationId = "org-id";
+const schoolId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const now = new Date("2026-01-01T00:00:00.000Z");
-const headers = new Headers();
 const database = { kind: "db" };
 
 describe("listAdminSchools", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		requireGlobalAdminMock.mockResolvedValue(admin);
 		getDatabaseMock.mockReturnValue(database);
-		listSchoolsMock.mockResolvedValue([
+		listAdminSchoolSummariesMock.mockResolvedValue([
 			{
 				school: {
 					id: schoolId,
-					organizationId,
 					commercialName: "Colegio Santa Elena",
 					status: "onboarding",
 					createdAt: now,
 				},
 				organization: {
-					id: organizationId,
 					slug: "colegio-santa-elena",
 				},
+				teamCount: 3,
+				studentCount: 0,
 			},
 		]);
-		listMembersWithUserByOrganizationIdMock.mockResolvedValue([
-			{ id: "member-1" },
-			{ id: "member-2" },
-		]);
-		listInvitationsByOrganizationIdMock.mockResolvedValue([
-			{ id: "inv-pending", status: "pending" },
-			{ id: "inv-accepted", status: "accepted" },
-		]);
-		countStudentsBySchoolIdMock.mockResolvedValue(0);
 	});
 
-	it("requires a global admin and maps teamCount as members plus pending invitations", async () => {
+	it("maps a single summary query into list items", async () => {
 		const result = await listAdminSchools({
-			headers,
+			admin,
 			query: "santa",
 			status: "onboarding",
 		});
 
-		expect(requireGlobalAdminMock).toHaveBeenCalledWith(headers);
-		expect(listSchoolsMock).toHaveBeenCalledWith(database, {
+		expect(listAdminSchoolSummariesMock).toHaveBeenCalledWith(database, {
 			query: "santa",
 			status: "onboarding",
 		});
-		expect(listMembersWithUserByOrganizationIdMock).toHaveBeenCalledWith(
-			database,
-			organizationId,
-		);
-		expect(listInvitationsByOrganizationIdMock).toHaveBeenCalledWith(
-			database,
-			organizationId,
-		);
-		expect(countStudentsBySchoolIdMock).toHaveBeenCalledWith(
-			database,
-			schoolId,
-		);
+		expect(listAdminSchoolSummariesMock).toHaveBeenCalledOnce();
 		expect(result).toEqual([
 			{
 				id: schoolId,

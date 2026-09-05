@@ -21,6 +21,8 @@ export const domainErrorCodes = [
 	"ENROLLMENT_NOT_ENROLLED",
 	"SECTION_NOT_FOUND",
 	"INVALID_MONEY_AMOUNT",
+	"INVALID_INPUT",
+	"INTERNAL",
 ] as const;
 
 export type DomainErrorCode = (typeof domainErrorCodes)[number];

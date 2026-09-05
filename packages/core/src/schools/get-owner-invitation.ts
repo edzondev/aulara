@@ -1,12 +1,14 @@
 import { getDatabase } from "@aulara/db/client";
 import { findInvitationById } from "@aulara/db/queries/invitations";
 import { findOrganizationById } from "@aulara/db/queries/members";
+import { currentDate } from "../clock.ts";
 import { DomainError } from "../errors.ts";
 import { readPendingOwnerName } from "./organization-metadata.ts";
 
 export type OwnerInvitationView = {
 	id: string;
 	email: string;
+	organizationId: string;
 	organizationName: string;
 	organizationSlug: string;
 	pendingOwnerName: string | null;
@@ -35,7 +37,7 @@ export async function getOwnerInvitationForAccept(
 		);
 	}
 
-	if (invitation.expiresAt < new Date()) {
+	if (invitation.expiresAt < currentDate()) {
 		throw new DomainError(
 			"INVITATION_EXPIRED",
 			"The invitation has expired",
@@ -59,6 +61,7 @@ export async function getOwnerInvitationForAccept(
 	return {
 		id: invitation.id,
 		email: invitation.email,
+		organizationId: organization.id,
 		organizationName: organization.name,
 		organizationSlug: organization.slug,
 		pendingOwnerName: readPendingOwnerName(organization.metadata),

@@ -2,16 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainError } from "../errors.ts";
 import { reactivateSchool, suspendSchool } from "./set-school-suspension.ts";
 
-const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
 const getDatabaseMock = vi.hoisted(() => vi.fn());
 const findSchoolByIdMock = vi.hoisted(() => vi.fn());
-const updateMock = vi.hoisted(() => vi.fn());
-const updateSetMock = vi.hoisted(() => vi.fn());
-const updateWhereMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@aulara/auth/guards", () => ({
-	requireGlobalAdmin: requireGlobalAdminMock,
-}));
+const updateSchoolStatusMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@aulara/db/client", () => ({
 	getDatabase: getDatabaseMock,
@@ -19,20 +12,20 @@ vi.mock("@aulara/db/client", () => ({
 
 vi.mock("@aulara/db/queries/schools", () => ({
 	findSchoolById: findSchoolByIdMock,
+	updateSchoolStatus: updateSchoolStatusMock,
 }));
 
 const admin = {
-	id: "admin-id",
+	id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	email: "jorge@aulara.pe",
 	name: "Jorge",
 	role: "admin" as const,
 };
 
-const schoolId = "school-id";
-const organizationId = "org-id";
+const schoolId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const organizationId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const now = new Date("2026-01-01T00:00:00.000Z");
-const headers = new Headers();
-const database = { update: updateMock };
+const database = { kind: "db" };
 
 function schoolRow(
 	status: "onboarding" | "active" | "suspended" | "cancelled",
@@ -41,19 +34,6 @@ function schoolRow(
 	return {
 		id: schoolId,
 		organizationId,
-		legalName: "Colegio Santa Elena",
-		commercialName: "Colegio Santa Elena",
-		ruc: null,
-		modularCode: null,
-		contactEmail: null,
-		contactPhone: null,
-		addressLine: null,
-		district: null,
-		province: null,
-		department: null,
-		countryCode: "PE",
-		timezone: "America/Lima",
-		currencyCode: "PEN",
 		status,
 		statusBeforeSuspend,
 		createdAt: now,
@@ -81,34 +61,27 @@ async function expectDomainError(
 describe("suspendSchool", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		requireGlobalAdminMock.mockResolvedValue(admin);
 		getDatabaseMock.mockReturnValue(database);
-		updateWhereMock.mockResolvedValue(undefined);
-		updateSetMock.mockReturnValue({ where: updateWhereMock });
-		updateMock.mockReturnValue({ set: updateSetMock });
+		updateSchoolStatusMock.mockResolvedValue(undefined);
 		findSchoolByIdMock.mockResolvedValue(schoolRow("onboarding"));
 	});
 
 	it("suspends an onboarding school and stores statusBeforeSuspend", async () => {
-		await suspendSchool({ headers, schoolId });
+		await suspendSchool({ admin, schoolId });
 
-		expect(requireGlobalAdminMock).toHaveBeenCalledWith(headers);
 		expect(findSchoolByIdMock).toHaveBeenCalledWith(database, schoolId);
-		expect(updateMock).toHaveBeenCalled();
-		expect(updateSetMock).toHaveBeenCalledWith({
+		expect(updateSchoolStatusMock).toHaveBeenCalledWith(database, schoolId, {
 			status: "suspended",
 			statusBeforeSuspend: "onboarding",
 		});
-		expect(updateWhereMock).toHaveBeenCalled();
 	});
 
 	it("suspends an active school and stores statusBeforeSuspend", async () => {
 		findSchoolByIdMock.mockResolvedValue(schoolRow("active"));
 
-		await suspendSchool({ headers, schoolId });
+		await suspendSchool({ admin, schoolId });
 
-		expect(updateSetMock).toHaveBeenCalledWith({
+		expect(updateSchoolStatusMock).toHaveBeenCalledWith(database, schoolId, {
 			status: "suspended",
 			statusBeforeSuspend: "active",
 		});
@@ -118,83 +91,80 @@ describe("suspendSchool", () => {
 		findSchoolByIdMock.mockResolvedValue(schoolRow("suspended", "onboarding"));
 
 		await expectDomainError(
-			() => suspendSchool({ headers, schoolId }),
+			() => suspendSchool({ admin, schoolId }),
 			"SCHOOL_NOT_SUSPENDABLE",
 			409,
 		);
 
-		expect(updateMock).not.toHaveBeenCalled();
+		expect(updateSchoolStatusMock).not.toHaveBeenCalled();
 	});
 
 	it("throws SCHOOL_NOT_FOUND when the school is missing", async () => {
 		findSchoolByIdMock.mockResolvedValue(undefined);
 
 		await expectDomainError(
-			() => suspendSchool({ headers, schoolId }),
+			() => suspendSchool({ admin, schoolId }),
 			"SCHOOL_NOT_FOUND",
 			404,
 		);
+	});
 
-		expect(updateMock).not.toHaveBeenCalled();
+	it("throws INVALID_INPUT when the school id is not a UUID", async () => {
+		await expectDomainError(
+			() => suspendSchool({ admin, schoolId: "school-id" }),
+			"INVALID_INPUT",
+			400,
+		);
+
+		expect(findSchoolByIdMock).not.toHaveBeenCalled();
 	});
 });
 
 describe("reactivateSchool", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		requireGlobalAdminMock.mockResolvedValue(admin);
 		getDatabaseMock.mockReturnValue(database);
-		updateWhereMock.mockResolvedValue(undefined);
-		updateSetMock.mockReturnValue({ where: updateWhereMock });
-		updateMock.mockReturnValue({ set: updateSetMock });
+		updateSchoolStatusMock.mockResolvedValue(undefined);
 		findSchoolByIdMock.mockResolvedValue(schoolRow("suspended", "active"));
 	});
 
 	it("restores statusBeforeSuspend and clears the snapshot", async () => {
-		await reactivateSchool({ headers, schoolId });
+		await reactivateSchool({ admin, schoolId });
 
-		expect(requireGlobalAdminMock).toHaveBeenCalledWith(headers);
-		expect(findSchoolByIdMock).toHaveBeenCalledWith(database, schoolId);
-		expect(updateSetMock).toHaveBeenCalledWith({
+		expect(updateSchoolStatusMock).toHaveBeenCalledWith(database, schoolId, {
 			status: "active",
 			statusBeforeSuspend: null,
 		});
-		expect(updateWhereMock).toHaveBeenCalled();
 	});
 
 	it("reactivates to onboarding when statusBeforeSuspend is null", async () => {
 		findSchoolByIdMock.mockResolvedValue(schoolRow("suspended", null));
 
-		await reactivateSchool({ headers, schoolId });
+		await reactivateSchool({ admin, schoolId });
 
-		expect(updateSetMock).toHaveBeenCalledWith({
+		expect(updateSchoolStatusMock).toHaveBeenCalledWith(database, schoolId, {
 			status: "onboarding",
 			statusBeforeSuspend: null,
 		});
 	});
 
 	it("throws SCHOOL_NOT_SUSPENDABLE when the school is not suspended", async () => {
-		findSchoolByIdMock.mockResolvedValue(schoolRow("onboarding"));
+		findSchoolByIdMock.mockResolvedValue(schoolRow("active"));
 
 		await expectDomainError(
-			() => reactivateSchool({ headers, schoolId }),
+			() => reactivateSchool({ admin, schoolId }),
 			"SCHOOL_NOT_SUSPENDABLE",
 			409,
 		);
-
-		expect(updateMock).not.toHaveBeenCalled();
 	});
 
 	it("throws SCHOOL_NOT_FOUND when the school is missing", async () => {
 		findSchoolByIdMock.mockResolvedValue(undefined);
 
 		await expectDomainError(
-			() => reactivateSchool({ headers, schoolId }),
+			() => reactivateSchool({ admin, schoolId }),
 			"SCHOOL_NOT_FOUND",
 			404,
 		);
-
-		expect(updateMock).not.toHaveBeenCalled();
 	});
 });

@@ -6,7 +6,7 @@
 
 import { DomainError } from "../errors.ts";
 
-const amountPattern = /^-?\d+(\.\d{1,2})?$/;
+export const amountPattern = /^-?\d+(\.\d{1,2})?$/;
 
 const percentageDenominator = 10000n;
 
@@ -54,9 +54,8 @@ export function formatCents(cents: bigint): string {
  * must be non-negative (all money and percentage values in Aulara are).
  */
 export function roundHalfUpDiv(numerator: bigint, denominator: bigint): bigint {
-	const doubled = numerator * 2n;
-	const quotient = doubled / denominator;
-	const remainder = doubled % denominator;
+	const quotient = numerator / denominator;
+	const remainder = numerator % denominator;
 
 	return remainder * 2n >= denominator ? quotient + 1n : quotient;
 }

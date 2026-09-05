@@ -1,30 +1,41 @@
-import { ownerInvitationExpiresInSeconds } from "@aulara/auth/constants";
-import { requireGlobalAdmin } from "@aulara/auth/guards";
-import { auth } from "@aulara/auth/server";
+import type { AuthenticatedUser } from "@aulara/auth/guards";
+import type { OrgProvisioningAdapter } from "@aulara/auth/org-provisioning";
 import { getDatabase } from "@aulara/db/client";
 import { findPendingOwnerInvitation } from "@aulara/db/queries/invitations";
-import { findSchoolByOrganizationId } from "@aulara/db/queries/schools";
-import { organization, school } from "@aulara/db/schema";
+import { findOrganizationBySlug } from "@aulara/db/queries/members";
+import {
+	findSchoolByOrganizationId,
+	insertSchool,
+} from "@aulara/db/queries/schools";
 import { getAuthEnvironment } from "@aulara/env/auth";
-import { getOrgAdapter } from "better-auth/plugins/organization";
-import { eq } from "drizzle-orm";
+import { currentDate } from "../clock.ts";
 import { DomainError, findPostgresErrorCode } from "../errors.ts";
-import { isValidEmail } from "./email.ts";
+import { emailSchema } from "./email-schema.ts";
 import { ownerInvitationUrl } from "./invitation-url.ts";
 import { writePendingOwnerName } from "./organization-metadata.ts";
 import { slugifySchoolIdentifier } from "./slug.ts";
 
+export type GlobalAdmin = AuthenticatedUser & { role: "admin" };
+
 export type ProvisionSchoolTenantInput = {
-	headers: Headers;
+	admin: GlobalAdmin;
 	organizationName: string;
 	organizationSlug: string;
 	ownerName: string;
 	ownerEmail: string;
+	orgAdapter?: OrgProvisioningAdapter;
 };
 
+type OrganizationRow = NonNullable<
+	Awaited<ReturnType<typeof findOrganizationBySlug>>
+>;
+type SchoolRow = NonNullable<
+	Awaited<ReturnType<typeof findSchoolByOrganizationId>>
+>;
+
 export type ProvisionSchoolTenantResult = {
-	organization: typeof organization.$inferSelect;
-	school: typeof school.$inferSelect;
+	organization: OrganizationRow;
+	school: SchoolRow;
 	invitation: {
 		id: string;
 		email: string;
@@ -34,12 +45,6 @@ export type ProvisionSchoolTenantResult = {
 	};
 	invitationUrl: string;
 };
-
-type OrganizationRow = typeof organization.$inferSelect;
-type SchoolRow = typeof school.$inferSelect;
-type OrgAdapter = ReturnType<typeof getOrgAdapter>;
-type OrgAdapterContext = Parameters<typeof getOrgAdapter>[0];
-type InvitationInviter = Parameters<OrgAdapter["createInvitation"]>[0]["user"];
 
 function toInvitationResult(invitation: {
 	id: string;
@@ -57,18 +62,6 @@ function toInvitationResult(invitation: {
 	};
 }
 
-async function findOrganizationBySlug(
-	slug: string,
-): Promise<OrganizationRow | undefined> {
-	const [row] = await getDatabase()
-		.select()
-		.from(organization)
-		.where(eq(organization.slug, slug))
-		.limit(1);
-
-	return row;
-}
-
 async function insertSchoolWithReconciliation(
 	organizationId: string,
 	organizationName: string,
@@ -76,15 +69,12 @@ async function insertSchoolWithReconciliation(
 	const database = getDatabase();
 
 	try {
-		const [row] = await database
-			.insert(school)
-			.values({
-				organizationId,
-				legalName: organizationName,
-				commercialName: organizationName,
-				status: "onboarding",
-			})
-			.returning();
+		const row = await insertSchool(database, {
+			organizationId,
+			legalName: organizationName,
+			commercialName: organizationName,
+			status: "onboarding",
+		});
 
 		if (!row) {
 			throw new DomainError(
@@ -96,7 +86,6 @@ async function insertSchoolWithReconciliation(
 
 		return row;
 	} catch (error) {
-		// 23505 = unique_violation on school_organization_id_unique.
 		if (findPostgresErrorCode(error) === "23505") {
 			const existing = await findSchoolByOrganizationId(
 				database,
@@ -121,7 +110,11 @@ async function insertSchoolWithReconciliation(
 export async function provisionSchoolTenant(
 	input: ProvisionSchoolTenantInput,
 ): Promise<ProvisionSchoolTenantResult> {
-	const admin = await requireGlobalAdmin(input.headers);
+	const parsedEmail = emailSchema.safeParse(input.ownerEmail);
+
+	if (!parsedEmail.success) {
+		throw new DomainError("INVALID_EMAIL", "The owner email is invalid", 400);
+	}
 
 	const slug = slugifySchoolIdentifier(
 		input.organizationSlug || input.organizationName,
@@ -135,36 +128,29 @@ export async function provisionSchoolTenant(
 		);
 	}
 
-	const email = input.ownerEmail.trim().toLowerCase();
-
-	if (!isValidEmail(email)) {
-		throw new DomainError("INVALID_EMAIL", "The owner email is invalid", 400);
-	}
-
+	const email = parsedEmail.data.toLowerCase();
 	const organizationName = input.organizationName.trim();
 	const database = getDatabase();
-	const existingOrganization = await findOrganizationBySlug(slug);
-
-	const adapter = getOrgAdapter(
-		(await auth.$context) as unknown as OrgAdapterContext,
-		{ invitationExpiresIn: ownerInvitationExpiresInSeconds },
-	);
+	const existingOrganization = await findOrganizationBySlug(database, slug);
+	const adapter =
+		input.orgAdapter ??
+		(await (
+			await import("@aulara/auth/org-provisioning")
+		).createOrgProvisioningAdapter());
 
 	let resolvedOrganization: OrganizationRow;
 
 	if (!existingOrganization) {
 		await adapter.createOrganization({
-			organization: {
-				name: organizationName,
-				slug,
-				createdAt: new Date(),
-				metadata: JSON.parse(
-					writePendingOwnerName(null, input.ownerName.trim()),
-				),
-			},
+			name: organizationName,
+			slug,
+			createdAt: currentDate(),
+			metadata: JSON.parse(
+				writePendingOwnerName(null, input.ownerName.trim()),
+			) as Record<string, unknown>,
 		});
 
-		const createdOrganization = await findOrganizationBySlug(slug);
+		const createdOrganization = await findOrganizationBySlug(database, slug);
 
 		if (!createdOrganization) {
 			throw new DomainError(
@@ -192,12 +178,9 @@ export async function provisionSchoolTenant(
 			organizationName,
 		));
 
-	const { members } = await adapter.listMembers({
-		organizationId: resolvedOrganization.id,
-		limit: 1,
-	});
+	const memberIds = await adapter.listMemberIds(resolvedOrganization.id);
 
-	if (members.length > 0) {
+	if (memberIds.length > 0) {
 		throw new DomainError(
 			"PROVISIONING_CONFLICT",
 			"The organization already has a member",
@@ -221,21 +204,17 @@ export async function provisionSchoolTenant(
 		);
 	}
 
-	const pendingInvitations = await adapter.findPendingInvitation({
+	const pendingInvitations = await adapter.findPendingInvitations(
 		email,
-		organizationId: resolvedOrganization.id,
-	});
+		resolvedOrganization.id,
+	);
 	const pendingInvitation = pendingInvitations[0];
 	const createdInvitation =
 		pendingInvitation ??
-		(await adapter.createInvitation({
-			invitation: {
-				email,
-				role: "owner",
-				organizationId: resolvedOrganization.id,
-				teamIds: [],
-			},
-			user: { id: admin.id } as InvitationInviter,
+		(await adapter.createOwnerInvitation({
+			email,
+			organizationId: resolvedOrganization.id,
+			inviterUserId: input.admin.id,
 		}));
 
 	const invitation = toInvitationResult(createdInvitation);

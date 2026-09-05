@@ -7,6 +7,7 @@ const getDatabaseMock = vi.hoisted(() => vi.fn());
 const findInvitationByIdMock = vi.hoisted(() => vi.fn());
 const findOrganizationByIdMock = vi.hoisted(() => vi.fn());
 const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
+const currentDateMock = vi.hoisted(() => vi.fn(() => new Date()));
 
 vi.mock("@aulara/db/client", () => ({
 	getDatabase: getDatabaseMock,
@@ -23,6 +24,14 @@ vi.mock("@aulara/db/queries/members", () => ({
 vi.mock("@aulara/auth/guards", () => ({
 	requireGlobalAdmin: requireGlobalAdminMock,
 }));
+
+vi.mock("../clock.ts", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("../clock.ts")>();
+	return {
+		...actual,
+		currentDate: currentDateMock,
+	};
+});
 
 const invitationId = "inv-id";
 const organizationId = "org-id";
@@ -69,6 +78,7 @@ async function expectDomainError(
 describe("getOwnerInvitationForAccept", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		currentDateMock.mockImplementation(() => new Date());
 		vi.useFakeTimers();
 		vi.setSystemTime(now);
 
@@ -93,6 +103,7 @@ describe("getOwnerInvitationForAccept", () => {
 		expect(result).toEqual({
 			id: invitationId,
 			email: "hernan@santaelena.pe",
+			organizationId,
 			organizationName: "Colegio Santa Elena",
 			organizationSlug: "colegio-santa-elena",
 			pendingOwnerName: "Hernán",
@@ -141,5 +152,20 @@ describe("getOwnerInvitationForAccept", () => {
 		);
 
 		expect(findOrganizationByIdMock).not.toHaveBeenCalled();
+	});
+
+	it("compares expiry against currentDate, not the process clock", async () => {
+		vi.useRealTimers();
+		currentDateMock.mockReturnValue(new Date("2099-06-02T00:00:00.000Z"));
+		findInvitationByIdMock.mockResolvedValue({
+			...pendingInvitation,
+			expiresAt: new Date("2099-06-01T00:00:00.000Z"),
+		});
+
+		await expectDomainError(
+			() => getOwnerInvitationForAccept(invitationId),
+			"INVITATION_EXPIRED",
+			410,
+		);
 	});
 });

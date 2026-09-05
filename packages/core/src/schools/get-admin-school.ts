@@ -1,4 +1,4 @@
-import { requireGlobalAdmin } from "@aulara/auth/guards";
+import { hasOrganizationRole } from "@aulara/auth/permissions";
 import { getDatabase } from "@aulara/db/client";
 import { listInvitationsByOrganizationId } from "@aulara/db/queries/invitations";
 import {
@@ -10,36 +10,19 @@ import {
 	findActiveAcademicYearName,
 	findSchoolById,
 } from "@aulara/db/queries/schools";
-import type { SchoolStatus } from "@aulara/db/schema";
 import { getAuthEnvironment } from "@aulara/env/auth";
 import { DomainError } from "../errors.ts";
+import { parseDomainInput } from "../parse.ts";
 import { ownerInvitationUrl } from "./invitation-url.ts";
 import { readPendingOwnerName } from "./organization-metadata.ts";
+import type { GlobalAdmin } from "./provision-school.ts";
+import { schoolIdSchema } from "./school-id-schema.ts";
+import type { AdminSchoolDetail, AdminSchoolPerson } from "./types.ts";
 
-export type AdminSchoolPerson = {
-	kind: "member" | "invitation";
-	name: string;
-	email: string;
-	roleLabel: "Propietario" | "Administrador" | "Miembro";
-	statusLabel: "Activo" | "Invitación enviada";
-	canResend: boolean;
-};
-
-export type AdminSchoolDetail = {
-	id: string;
-	commercialName: string;
-	slug: string;
-	status: SchoolStatus;
-	createdAt: string;
-	activeAcademicYearLabel: string;
-	studentCount: number;
-	memberCount: number;
-	people: AdminSchoolPerson[];
-	invitationUrl: string | null;
-};
+export type { AdminSchoolDetail, AdminSchoolPerson };
 
 function isOwnerRole(role: string | null | undefined): boolean {
-	return role?.includes("owner") === true;
+	return hasOrganizationRole(role, "owner");
 }
 
 function personRoleLabel(
@@ -57,13 +40,16 @@ function personRoleLabel(
 }
 
 export async function getAdminSchool(input: {
-	headers: Headers;
+	admin: GlobalAdmin;
 	schoolId: string;
 }): Promise<AdminSchoolDetail> {
-	await requireGlobalAdmin(input.headers);
-
+	const schoolId = parseDomainInput(
+		schoolIdSchema,
+		input.schoolId,
+		"The school id is invalid",
+	);
 	const database = getDatabase();
-	const existingSchool = await findSchoolById(database, input.schoolId);
+	const existingSchool = await findSchoolById(database, schoolId);
 
 	if (!existingSchool) {
 		throw new DomainError("SCHOOL_NOT_FOUND", "The school was not found", 404);

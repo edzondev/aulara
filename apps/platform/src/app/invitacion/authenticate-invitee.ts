@@ -1,4 +1,4 @@
-import { isValidEmail } from "@aulara/core/schools/email";
+import { emailSchema } from "@aulara/core/schools/email-schema";
 
 type AuthResult = { error: { message?: string } | null };
 
@@ -19,7 +19,7 @@ export async function authenticateInvitee(
 	client: InviteeAuthClient,
 	input: { email: string; name: string; password: string },
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-	if (!isValidEmail(input.email)) {
+	if (!emailSchema.safeParse(input.email).success) {
 		return { ok: false, message: "El correo no es válido." };
 	}
 

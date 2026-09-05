@@ -1,8 +1,8 @@
 import { DomainError } from "@aulara/core/errors";
 import { getAdminSchool } from "@aulara/core/schools";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { SchoolDetail } from "../../../_components/school-detail";
+import { SchoolDetail } from "@/components/colegios/school-detail";
+import { requireAdmin } from "@/lib/auth-server";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -11,17 +11,20 @@ export default async function ColegioPage({ params }: Props) {
 
 	try {
 		const school = await getAdminSchool({
-			headers: await headers(),
+			admin: await requireAdmin(),
 			schoolId: id,
 		});
 
 		return (
-			<main className="w-full max-w-[840px] px-5 pt-[22px] pb-10 text-[var(--aulara-ink)]">
+			<main className="w-full max-w-[840px] px-4 pt-[22px] pb-10 text-[var(--aulara-ink)] sm:px-5">
 				<SchoolDetail school={school} />
 			</main>
 		);
 	} catch (error) {
-		if (error instanceof DomainError && error.code === "SCHOOL_NOT_FOUND") {
+		if (
+			error instanceof DomainError &&
+			(error.code === "SCHOOL_NOT_FOUND" || error.code === "INVALID_INPUT")
+		) {
 			notFound();
 		}
 

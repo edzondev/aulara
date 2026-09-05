@@ -3,7 +3,6 @@ import { DomainError } from "../errors.ts";
 import { getAdminSchool } from "./get-admin-school.ts";
 import { writePendingOwnerName } from "./organization-metadata.ts";
 
-const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
 const getDatabaseMock = vi.hoisted(() => vi.fn());
 const findSchoolByIdMock = vi.hoisted(() => vi.fn());
 const countStudentsBySchoolIdMock = vi.hoisted(() => vi.fn());
@@ -12,10 +11,6 @@ const listMembersWithUserByOrganizationIdMock = vi.hoisted(() => vi.fn());
 const findOrganizationByIdMock = vi.hoisted(() => vi.fn());
 const listInvitationsByOrganizationIdMock = vi.hoisted(() => vi.fn());
 const getAuthEnvironmentMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@aulara/auth/guards", () => ({
-	requireGlobalAdmin: requireGlobalAdminMock,
-}));
 
 vi.mock("@aulara/db/client", () => ({
 	getDatabase: getDatabaseMock,
@@ -41,17 +36,16 @@ vi.mock("@aulara/env/auth", () => ({
 }));
 
 const admin = {
-	id: "admin-id",
+	id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	email: "jorge@aulara.pe",
 	name: "Jorge",
 	role: "admin" as const,
 };
 
-const schoolId = "school-id";
-const organizationId = "org-id";
-const invitationId = "inv-id";
+const schoolId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const organizationId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const invitationId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const now = new Date("2026-01-01T00:00:00.000Z");
-const headers = new Headers();
 const database = { kind: "db" };
 
 const schoolRow = {
@@ -92,7 +86,6 @@ async function expectDomainError(
 describe("getAdminSchool", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		requireGlobalAdminMock.mockResolvedValue(admin);
 		getDatabaseMock.mockReturnValue(database);
 		getAuthEnvironmentMock.mockReturnValue({
 			baseURL: "http://localhost:3000",
@@ -136,10 +129,9 @@ describe("getAdminSchool", () => {
 		findActiveAcademicYearNameMock.mockResolvedValue(null);
 	});
 
-	it("requires a global admin and maps people, invitation URL, and year label", async () => {
-		const result = await getAdminSchool({ headers, schoolId });
+	it("maps people, invitation URL, and year label", async () => {
+		const result = await getAdminSchool({ admin, schoolId });
 
-		expect(requireGlobalAdminMock).toHaveBeenCalledWith(headers);
 		expect(findSchoolByIdMock).toHaveBeenCalledWith(database, schoolId);
 		expect(listMembersWithUserByOrganizationIdMock).toHaveBeenCalledWith(
 			database,
@@ -200,7 +192,7 @@ describe("getAdminSchool", () => {
 		findActiveAcademicYearNameMock.mockResolvedValue("2026");
 		listInvitationsByOrganizationIdMock.mockResolvedValue([]);
 
-		const result = await getAdminSchool({ headers, schoolId });
+		const result = await getAdminSchool({ admin, schoolId });
 
 		expect(result.activeAcademicYearLabel).toBe("2026");
 		expect(result.invitationUrl).toBeNull();
@@ -211,7 +203,7 @@ describe("getAdminSchool", () => {
 		findSchoolByIdMock.mockResolvedValue(undefined);
 
 		await expectDomainError(
-			() => getAdminSchool({ headers, schoolId }),
+			() => getAdminSchool({ admin, schoolId }),
 			"SCHOOL_NOT_FOUND",
 			404,
 		);

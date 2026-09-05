@@ -15,7 +15,10 @@ export function updatedAtColumn() {
 }
 
 export function statusCheck(column: SQLWrapper, values: readonly string[]) {
-	return sql`${column} in (${sql.raw(values.map((value) => `'${value}'`).join(", "))})`;
+	return sql`${column} in (${sql.join(
+		values.map((value) => sql.raw(`'${value}'`)),
+		sql`, `,
+	)})`;
 }
 
 export function currencyCheck(column: SQLWrapper) {

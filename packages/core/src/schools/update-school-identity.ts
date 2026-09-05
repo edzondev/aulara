@@ -1,8 +1,6 @@
-import { auth } from "@aulara/auth/server";
 import type { AuthorizedSchoolContext } from "@aulara/auth/types";
 import { getDatabase } from "@aulara/db/client";
-import { school } from "@aulara/db/schema";
-import { eq } from "drizzle-orm";
+import { updateSchoolAndOrganizationName } from "@aulara/db/queries/schools";
 import { DomainError } from "../errors.ts";
 
 export type UpdateSchoolIdentityInput = {
@@ -10,51 +8,36 @@ export type UpdateSchoolIdentityInput = {
 };
 
 /**
- * Renames a school keeping school.commercialName and
- * organization.name in sync.
+ * Renames a school keeping school.commercialName and organization.name
+ * in sync. Both writes run in one database transaction so a failure
+ * cannot leave only one of the two names updated.
  *
- * Better Auth API choice: `auth.api.updateOrganization` cannot be used
- * here — it requires HTTP headers with a session cookie
- * (`requireHeaders: true`) plus a member permission check, and
- * `AuthorizedSchoolContext` carries no request. The update is therefore
- * issued through Better Auth's internal adapter
- * (`(await auth.$context).adapter.update({ model: "organization", ... })`,
- * the same call the organization plugin's `updateOrganization` adapter
- * method makes) instead of hand-writing SQL against the organization
- * table.
- *
- * The school row is updated first. If the organization update then
- * fails, SCHOOL_IDENTITY_SYNC_FAILED is thrown stating that the school
- * was renamed but the organization was not; the operation is safe to
- * retry (both updates are idempotent).
+ * `auth.api.updateOrganization` is not used: it requires request
+ * headers and a member permission check, and it cannot join this
+ * transaction.
  */
 export async function updateSchoolIdentity(
 	context: AuthorizedSchoolContext,
 	input: UpdateSchoolIdentityInput,
 ): Promise<void> {
-	const database = getDatabase();
-
-	await database
-		.update(school)
-		.set({ commercialName: input.commercialName })
-		.where(eq(school.id, context.school.id));
-
-	const authContext = await auth.$context;
-
 	try {
-		const updated = await authContext.adapter.update({
-			model: "organization",
-			where: [{ field: "id", value: context.organizationId }],
-			update: { name: input.commercialName },
+		const updated = await updateSchoolAndOrganizationName(getDatabase(), {
+			schoolId: context.school.id,
+			organizationId: context.organizationId,
+			name: input.commercialName,
 		});
 
 		if (!updated) {
 			throw new Error("organization not found");
 		}
 	} catch (error) {
+		if (error instanceof DomainError) {
+			throw error;
+		}
+
 		throw new DomainError(
 			"SCHOOL_IDENTITY_SYNC_FAILED",
-			`school.commercialName was updated to "${input.commercialName}" but organization.name could not be updated; retry the operation to resynchronize`,
+			"school.commercialName and organization.name could not be updated together; retry the operation",
 			500,
 			{ cause: error },
 		);

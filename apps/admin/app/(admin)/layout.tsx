@@ -1,8 +1,8 @@
 import { AuthContextError, authContextErrorCodes } from "@aulara/auth/errors";
 import { redirect } from "next/navigation";
 import type { PropsWithChildren } from "react";
+import { AdminChrome } from "@/components/shell/admin-chrome";
 import { requireAdmin } from "@/lib/auth-server";
-import { AdminChrome } from "../_components/admin-chrome";
 
 export default async function AdminLayout({ children }: PropsWithChildren) {
 	try {

@@ -224,12 +224,12 @@ describe("resolveActiveSchoolContext", () => {
 		);
 	});
 
-	it("rejects with 404 SCHOOL_NOT_FOUND when the organization has no school", async () => {
+	it("rejects with 404 ACTIVE_SCHOOL_NOT_FOUND when the organization has no school", async () => {
 		mockSchoolContext({ withSchool: false });
 
 		await expectAuthContextError(
 			() => resolveActiveSchoolContext(new Headers()),
-			authContextErrorCodes.schoolNotFound,
+			authContextErrorCodes.activeSchoolNotFound,
 			404,
 		);
 	});

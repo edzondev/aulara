@@ -1,21 +1,28 @@
 import { ownerInvitationExpiresInSeconds } from "@aulara/auth/constants";
-import { requireGlobalAdmin } from "@aulara/auth/guards";
-import { auth } from "@aulara/auth/server";
+import type { OrgProvisioningAdapter } from "@aulara/auth/org-provisioning";
 import { getDatabase } from "@aulara/db/client";
 import { findPendingOwnerInvitation } from "@aulara/db/queries/invitations";
 import { findSchoolById } from "@aulara/db/queries/schools";
 import { getAuthEnvironment } from "@aulara/env/auth";
+import { currentDate, dateAfterSeconds } from "../clock.ts";
 import { DomainError } from "../errors.ts";
+import { parseDomainInput } from "../parse.ts";
 import { ownerInvitationUrl } from "./invitation-url.ts";
+import type { GlobalAdmin } from "./provision-school.ts";
+import { schoolIdSchema } from "./school-id-schema.ts";
 
 export async function reissueOwnerInvitation(input: {
-	headers: Headers;
+	admin: GlobalAdmin;
 	schoolId: string;
+	orgAdapter?: OrgProvisioningAdapter;
 }): Promise<{ invitationId: string; invitationUrl: string; expiresAt: Date }> {
-	await requireGlobalAdmin(input.headers);
-
+	const schoolId = parseDomainInput(
+		schoolIdSchema,
+		input.schoolId,
+		"The school id is invalid",
+	);
 	const database = getDatabase();
-	const existingSchool = await findSchoolById(database, input.schoolId);
+	const existingSchool = await findSchoolById(database, schoolId);
 
 	if (!existingSchool) {
 		throw new DomainError("SCHOOL_NOT_FOUND", "The school was not found", 404);
@@ -34,16 +41,17 @@ export async function reissueOwnerInvitation(input: {
 		);
 	}
 
-	// Better Auth keeps status=pending after expiry; extend the same row.
-	const expiresAt = new Date(
-		Date.now() + ownerInvitationExpiresInSeconds * 1000,
+	const expiresAt = dateAfterSeconds(
+		ownerInvitationExpiresInSeconds,
+		currentDate(),
 	);
+	const adapter =
+		input.orgAdapter ??
+		(await (
+			await import("@aulara/auth/org-provisioning")
+		).createOrgProvisioningAdapter());
 
-	await (await auth.$context).adapter.update({
-		model: "invitation",
-		where: [{ field: "id", value: invitation.id }],
-		update: { expiresAt },
-	});
+	await adapter.updateInvitationExpiresAt(invitation.id, expiresAt);
 
 	return {
 		invitationId: invitation.id,

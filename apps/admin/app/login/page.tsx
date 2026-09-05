@@ -1,4 +1,4 @@
-import { LoginForm } from "../_components/login-form";
+import { LoginForm } from "@/components/login/login-form";
 
 export default async function LoginPage({
 	searchParams,
@@ -10,8 +10,8 @@ export default async function LoginPage({
 	const forbidden = error === "forbidden";
 
 	return (
-		<main className="flex min-h-svh items-center justify-center bg-[var(--aulara-canvas)] px-6 text-[var(--aulara-ink)]">
-			<div className="w-[344px] max-w-full">
+		<main className="flex min-h-svh items-center justify-center bg-[var(--aulara-canvas)] px-4 text-[var(--aulara-ink)] sm:px-6">
+			<div className="w-full max-w-[344px]">
 				<div className="mb-[22px] flex items-center gap-2">
 					<span className="flex size-[18px] shrink-0 items-center justify-center rounded-[5px] bg-[var(--aulara-accent)]">
 						<span className="size-1.5 rounded-[2px] bg-[var(--aulara-surface)]" />

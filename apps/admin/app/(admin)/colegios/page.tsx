@@ -1,24 +1,20 @@
-import {
-	listAdminSchools,
-	parseSchoolStatusFilter,
-} from "@aulara/core/schools";
-import { headers } from "next/headers";
-import { Suspense } from "react";
+import { listAdminSchools } from "@aulara/core/schools";
+import { parseSchoolStatusFilter } from "@aulara/core/schools/status";
+import { CreateSchoolSheet } from "@/components/colegios/create-school-sheet";
+import { SchoolList } from "@/components/colegios/school-list";
+import { SchoolSearch } from "@/components/colegios/school-search";
+import { StatusFilter } from "@/components/colegios/status-filter";
 import { requireAdmin } from "@/lib/auth-server";
-import { CreateSchoolSheet } from "../../_components/create-school-sheet";
-import { SchoolList } from "../../_components/school-list";
-import { SchoolSearch } from "../../_components/school-search";
-import { StatusFilter } from "../../_components/status-filter";
 
 type Props = { searchParams: Promise<{ q?: string; estado?: string }> };
 
 export default async function ColegiosPage({ searchParams }: Props) {
-	await requireAdmin();
-	const params = await searchParams;
-	const status = parseSchoolStatusFilter(params.estado);
-	const query = params.q?.trim() ?? "";
+	const admin = await requireAdmin();
+	const search = await searchParams;
+	const status = parseSchoolStatusFilter(search.estado);
+	const query = search.q?.trim() ?? "";
 	const schools = await listAdminSchools({
-		headers: await headers(),
+		admin,
 		query,
 		status,
 	});
@@ -28,26 +24,24 @@ export default async function ColegiosPage({ searchParams }: Props) {
 	);
 
 	return (
-		<main className="w-full max-w-[840px] px-5 pt-[22px] pb-10 text-[var(--aulara-ink)]">
-			<div className="mb-3.5 flex items-center gap-3">
-				<h1 className="font-semibold text-[17px] leading-[23px] tracking-[-0.012em]">
-					Colegios
-				</h1>
-				<p className="text-[12.5px] text-[var(--aulara-ink-3)] tabular-nums">
-					{`${schools.length} colegios · ${totalStudents} alumnos en total`}
-				</p>
+		<main className="w-full max-w-[840px] px-4 pt-[22px] pb-10 text-[var(--aulara-ink)] sm:px-5">
+			<div className="mb-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+				<div className="min-w-0 sm:flex sm:flex-1 sm:items-center sm:gap-3">
+					<h1 className="font-semibold text-[17px] leading-[23px] tracking-[-0.012em]">
+						Colegios
+					</h1>
+					<p className="mt-1 text-[12.5px] text-[var(--aulara-ink-3)] tabular-nums sm:mt-0">
+						{`${schools.length} colegios · ${totalStudents} alumnos en total`}
+					</p>
+				</div>
 				<CreateSchoolSheet />
 			</div>
-			<Suspense
-				fallback={
-					<div className="mb-2.5 h-8 w-full max-w-md rounded-lg bg-[var(--aulara-sunken)]" />
-				}
-			>
-				<div className="mb-2.5 flex flex-wrap items-center gap-2">
-					<SchoolSearch />
-					<StatusFilter />
+			<div className="mb-2.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+				<SchoolSearch query={query} status={status} />
+				<div className="max-w-full overflow-x-auto">
+					<StatusFilter query={query} status={status} />
 				</div>
-			</Suspense>
+			</div>
 			<SchoolList query={query} schools={schools} />
 		</main>
 	);

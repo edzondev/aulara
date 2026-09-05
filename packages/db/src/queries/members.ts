@@ -29,6 +29,16 @@ export function findOrganizationById(db: AppDatabase, organizationId: string) {
 	});
 }
 
+export async function findOrganizationBySlug(db: AppDatabase, slug: string) {
+	const [row] = await db
+		.select()
+		.from(organization)
+		.where(eq(organization.slug, slug))
+		.limit(1);
+
+	return row ?? null;
+}
+
 export function listMembersWithUserByOrganizationId(
 	db: AppDatabase,
 	organizationId: string,

@@ -112,5 +112,10 @@ export async function acceptOwnerInvitation(
 		return accepted;
 	}
 
+	await auth.api.setActiveOrganization({
+		body: { organizationId: loaded.invitation.organizationId },
+		headers: headersList,
+	});
+
 	redirect("/inicio");
 }

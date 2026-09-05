@@ -1,6 +1,6 @@
 "use client";
 
-import { isValidEmail } from "@aulara/core/schools/email";
+import { emailSchema } from "@aulara/core/schools/email-schema";
 import { Button } from "@aulara/ui/components/button";
 import { Field, FieldLabel } from "@aulara/ui/components/field";
 import { Input } from "@aulara/ui/components/input";
@@ -19,7 +19,7 @@ export function LoginForm() {
 
 		setError(null);
 
-		if (!isValidEmail(email)) {
+		if (!emailSchema.safeParse(email).success) {
 			setError("El correo no es válido.");
 			return;
 		}

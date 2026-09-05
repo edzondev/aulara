@@ -6,9 +6,12 @@
 	"exports": {
 		"./errors": "./src/errors.ts",
 		"./schools": "./src/schools/index.ts",
-		"./schools/email": "./src/schools/email.ts",
+		"./schools/create-school-schema": "./src/schools/create-school-schema.ts",
+		"./schools/email-schema": "./src/schools/email-schema.ts",
+		"./schools/school-id-schema": "./src/schools/school-id-schema.ts",
 		"./schools/slug": "./src/schools/slug.ts",
 		"./schools/status": "./src/schools/status.ts",
+		"./schools/types": "./src/schools/types.ts",
 		"./billing": "./src/billing/index.ts",
 		"./tuition": "./src/tuition/index.ts",
 		"./payments": "./src/payments/index.ts"
@@ -24,8 +27,8 @@
 		"@aulara/auth": "workspace:*",
 		"@aulara/db": "workspace:*",
 		"@aulara/env": "workspace:*",
-		"better-auth": "1.7.2",
-		"drizzle-orm": "0.45.2"
+		"temporal-polyfill": "^1.0.4",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@aulara/ts-config": "workspace:*",

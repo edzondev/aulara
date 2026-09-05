@@ -1,5 +1,6 @@
 "use server";
 
+import { requireGlobalAdmin } from "@aulara/auth/guards";
 import { DomainError } from "@aulara/core/errors";
 import {
 	provisionSchoolTenant,
@@ -7,6 +8,7 @@ import {
 	reissueOwnerInvitation,
 	suspendSchool,
 } from "@aulara/core/schools";
+import { createSchoolSchema } from "@aulara/core/schools/create-school-schema";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -39,19 +41,26 @@ function revalidateSchoolPaths(schoolId: string): void {
 	revalidatePath(`/colegios/${schoolId}`);
 }
 
-export async function createSchoolAction(input: {
-	organizationName: string;
-	organizationSlug: string;
-	ownerName: string;
-	ownerEmail: string;
-}): Promise<
+export async function createSchoolAction(
+	input: unknown,
+): Promise<
 	| { ok: true; schoolId: string; invitationUrl: string }
 	| { ok: false; message: string }
 > {
+	const parsed = createSchoolSchema.safeParse(input);
+
+	if (!parsed.success) {
+		return {
+			ok: false,
+			message:
+				parsed.error.issues[0]?.message ?? "No se pudo crear el colegio.",
+		};
+	}
+
 	try {
 		const result = await provisionSchoolTenant({
-			headers: await headers(),
-			...input,
+			admin: await requireGlobalAdmin(await headers()),
+			...parsed.data,
 		});
 		return {
 			ok: true,
@@ -76,7 +85,7 @@ export async function reissueInvitationAction(
 > {
 	try {
 		const result = await reissueOwnerInvitation({
-			headers: await headers(),
+			admin: await requireGlobalAdmin(await headers()),
 			schoolId,
 		});
 		revalidateSchoolPaths(schoolId);
@@ -97,7 +106,7 @@ export async function suspendSchoolAction(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
 	try {
 		await suspendSchool({
-			headers: await headers(),
+			admin: await requireGlobalAdmin(await headers()),
 			schoolId,
 		});
 		revalidateSchoolPaths(schoolId);
@@ -118,7 +127,7 @@ export async function reactivateSchoolAction(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
 	try {
 		await reactivateSchool({
-			headers: await headers(),
+			admin: await requireGlobalAdmin(await headers()),
 			schoolId,
 		});
 		revalidateSchoolPaths(schoolId);

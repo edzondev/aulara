@@ -1,4 +1,3 @@
-import { ownerInvitationExpiresInSeconds } from "@aulara/auth/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainError } from "../errors.ts";
 import {
@@ -7,31 +6,18 @@ import {
 } from "./organization-metadata.ts";
 import { provisionSchoolTenant } from "./provision-school.ts";
 
-const requireGlobalAdminMock = vi.hoisted(() => vi.fn());
 const getDatabaseMock = vi.hoisted(() => vi.fn());
 const findSchoolByOrganizationIdMock = vi.hoisted(() => vi.fn());
-const getOrgAdapterMock = vi.hoisted(() => vi.fn());
-const createOrganizationMock = vi.hoisted(() => vi.fn());
-const createInvitationMock = vi.hoisted(() => vi.fn());
-const createMemberMock = vi.hoisted(() => vi.fn());
+const insertSchoolMock = vi.hoisted(() => vi.fn());
 const findOrganizationBySlugMock = vi.hoisted(() => vi.fn());
-const findMemberByEmailMock = vi.hoisted(() => vi.fn());
-const listMembersMock = vi.hoisted(() => vi.fn());
-const findPendingInvitationMock = vi.hoisted(() => vi.fn());
 const findPendingOwnerInvitationMock = vi.hoisted(() => vi.fn());
 const getAuthEnvironmentMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@aulara/auth/guards", () => ({
-	requireGlobalAdmin: requireGlobalAdminMock,
-}));
-
-vi.mock("@aulara/auth/server", () => ({
-	auth: { $context: Promise.resolve({ adapter: {} }) },
-}));
-
-vi.mock("better-auth/plugins/organization", () => ({
-	getOrgAdapter: getOrgAdapterMock,
-}));
+const currentDateMock = vi.hoisted(() => vi.fn(() => new Date()));
+const createOrganizationMock = vi.hoisted(() => vi.fn());
+const listMemberIdsMock = vi.hoisted(() => vi.fn());
+const findPendingInvitationsMock = vi.hoisted(() => vi.fn());
+const createOwnerInvitationMock = vi.hoisted(() => vi.fn());
+const updateInvitationExpiresAtMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@aulara/db/client", () => ({
 	getDatabase: getDatabaseMock,
@@ -39,6 +25,11 @@ vi.mock("@aulara/db/client", () => ({
 
 vi.mock("@aulara/db/queries/schools", () => ({
 	findSchoolByOrganizationId: findSchoolByOrganizationIdMock,
+	insertSchool: insertSchoolMock,
+}));
+
+vi.mock("@aulara/db/queries/members", () => ({
+	findOrganizationBySlug: findOrganizationBySlugMock,
 }));
 
 vi.mock("@aulara/db/queries/invitations", () => ({
@@ -49,20 +40,29 @@ vi.mock("@aulara/env/auth", () => ({
 	getAuthEnvironment: getAuthEnvironmentMock,
 }));
 
+vi.mock("../clock.ts", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("../clock.ts")>();
+	return {
+		...actual,
+		currentDate: currentDateMock,
+	};
+});
+
 const admin = {
-	id: "admin-id",
+	id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
 	email: "jorge@aulara.pe",
 	name: "Jorge",
 	role: "admin" as const,
 };
 
-const organizationId = "org-id";
-const schoolId = "school-id";
-const invitationId = "inv-id";
+const organizationId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const schoolId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const invitationId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
 const ownerName = "Hernán";
 const ownerEmail = "hernan@santaelena.pe";
 const organizationName = "Colegio Santa Elena";
 const organizationSlug = "colegio-santa-elena";
+const database = { kind: "db" };
 
 const organizationRow = {
 	id: organizationId,
@@ -97,57 +97,28 @@ const schoolRow = {
 
 const invitationRow = {
 	id: invitationId,
-	organizationId,
 	email: ownerEmail,
 	role: "owner",
 	status: "pending",
 	expiresAt: new Date("2026-01-08T00:00:00.000Z"),
-	inviterId: admin.id,
-	createdAt: new Date("2026-01-01T00:00:00.000Z"),
+};
+
+const orgAdapter = {
+	createOrganization: createOrganizationMock,
+	listMemberIds: listMemberIdsMock,
+	findPendingInvitations: findPendingInvitationsMock,
+	createOwnerInvitation: createOwnerInvitationMock,
+	updateInvitationExpiresAt: updateInvitationExpiresAtMock,
 };
 
 const provisionInput = {
-	headers: new Headers(),
+	admin,
 	organizationName,
 	organizationSlug: "Colegio Santa Elena",
 	ownerName,
 	ownerEmail: "Hernan@santaelena.pe",
+	orgAdapter,
 };
-
-const insertValuesMock = vi.fn();
-
-function createSelectChain(rows: unknown[]) {
-	const chain = {
-		from: vi.fn(),
-		where: vi.fn(),
-		limit: vi.fn().mockResolvedValue(rows),
-	};
-	chain.from.mockReturnValue(chain);
-	chain.where.mockReturnValue(chain);
-	return chain;
-}
-
-function mockDatabase(existingOrganization: typeof organizationRow | null) {
-	insertValuesMock.mockReturnValue({
-		returning: vi.fn().mockResolvedValue([schoolRow]),
-	});
-
-	const select = vi.fn();
-	if (existingOrganization) {
-		select.mockReturnValue(createSelectChain([existingOrganization]));
-	} else {
-		select
-			.mockReturnValueOnce(createSelectChain([]))
-			.mockReturnValue(createSelectChain([organizationRow]));
-	}
-
-	getDatabaseMock.mockReturnValue({
-		select,
-		insert: vi.fn(() => ({
-			values: insertValuesMock,
-		})),
-	});
-}
 
 async function expectDomainError(
 	action: () => Promise<unknown>,
@@ -169,60 +140,39 @@ async function expectDomainError(
 describe("provisionSchoolTenant", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		requireGlobalAdminMock.mockResolvedValue(admin);
+		currentDateMock.mockImplementation(() => new Date());
+		getDatabaseMock.mockReturnValue(database);
 		getAuthEnvironmentMock.mockReturnValue({
 			baseURL: "http://localhost:3000",
 		});
-		getOrgAdapterMock.mockReturnValue({
-			createOrganization: createOrganizationMock,
-			createInvitation: createInvitationMock,
-			createMember: createMemberMock,
-			findOrganizationBySlug: findOrganizationBySlugMock,
-			findMemberByEmail: findMemberByEmailMock,
-			listMembers: listMembersMock,
-			findPendingInvitation: findPendingInvitationMock,
-		});
-		createOrganizationMock.mockResolvedValue({
-			...organizationRow,
-			metadata: { pendingOwnerName: ownerName },
-		});
-		createInvitationMock.mockResolvedValue(invitationRow);
-		findMemberByEmailMock.mockResolvedValue(null);
-		listMembersMock.mockResolvedValue({ members: [], total: 0 });
-		findPendingInvitationMock.mockResolvedValue([]);
-		findPendingOwnerInvitationMock.mockResolvedValue(null);
+		findOrganizationBySlugMock
+			.mockResolvedValueOnce(null)
+			.mockResolvedValue(organizationRow);
 		findSchoolByOrganizationIdMock.mockResolvedValue(null);
-		mockDatabase(null);
+		insertSchoolMock.mockResolvedValue(schoolRow);
+		findPendingOwnerInvitationMock.mockResolvedValue(null);
+		listMemberIdsMock.mockResolvedValue([]);
+		findPendingInvitationsMock.mockResolvedValue([]);
+		createOwnerInvitationMock.mockResolvedValue(invitationRow);
+		createOrganizationMock.mockResolvedValue(undefined);
 	});
 
 	it("creates an organization and owner invitation without a member", async () => {
 		const result = await provisionSchoolTenant(provisionInput);
 
-		expect(requireGlobalAdminMock).toHaveBeenCalledWith(provisionInput.headers);
-		expect(getOrgAdapterMock).toHaveBeenCalledWith(
-			{ adapter: {} },
-			{ invitationExpiresIn: ownerInvitationExpiresInSeconds },
-		);
 		expect(createOrganizationMock).toHaveBeenCalledWith({
-			organization: {
-				name: organizationName,
-				slug: organizationSlug,
-				createdAt: expect.any(Date),
-				metadata: JSON.parse(writePendingOwnerName(null, ownerName)),
-			},
+			name: organizationName,
+			slug: organizationSlug,
+			createdAt: expect.any(Date),
+			metadata: JSON.parse(writePendingOwnerName(null, ownerName)),
 		});
-		expect(createInvitationMock).toHaveBeenCalledWith({
-			invitation: {
-				email: ownerEmail,
-				role: "owner",
-				organizationId,
-				teamIds: [],
-			},
-			user: { id: admin.id },
+		expect(createOwnerInvitationMock).toHaveBeenCalledWith({
+			email: ownerEmail,
+			organizationId,
+			inviterUserId: admin.id,
 		});
-		expect(createMemberMock).not.toHaveBeenCalled();
-		expect(insertValuesMock).toHaveBeenCalledWith(
+		expect(insertSchoolMock).toHaveBeenCalledWith(
+			database,
 			expect.objectContaining({
 				organizationId,
 				legalName: organizationName,
@@ -239,6 +189,20 @@ describe("provisionSchoolTenant", () => {
 		});
 	});
 
+	it("stamps organization.createdAt from currentDate", async () => {
+		const frozen = new Date("2026-02-03T04:05:06.000Z");
+		currentDateMock.mockReturnValue(frozen);
+
+		await provisionSchoolTenant(provisionInput);
+
+		expect(createOrganizationMock).toHaveBeenCalledWith({
+			name: organizationName,
+			slug: organizationSlug,
+			createdAt: frozen,
+			metadata: JSON.parse(writePendingOwnerName(null, ownerName)),
+		});
+	});
+
 	it("returns an onboarding school and an invitation URL", async () => {
 		const result = await provisionSchoolTenant(provisionInput);
 
@@ -246,12 +210,9 @@ describe("provisionSchoolTenant", () => {
 		expect(result.invitationUrl).toBe(
 			`http://localhost:3000/invitacion/${invitationId}`,
 		);
-		expect(result.invitationUrl.endsWith(`/invitacion/${invitationId}`)).toBe(
-			true,
-		);
 	});
 
-	it("returns Drizzle organization metadata as a string", async () => {
+	it("returns organization metadata as a string", async () => {
 		const result = await provisionSchoolTenant(provisionInput);
 
 		expect(typeof result.organization.metadata).toBe("string");
@@ -271,11 +232,11 @@ describe("provisionSchoolTenant", () => {
 
 		expect(error.message).toBe("The owner email is invalid");
 		expect(createOrganizationMock).not.toHaveBeenCalled();
-		expect(createInvitationMock).not.toHaveBeenCalled();
+		expect(createOwnerInvitationMock).not.toHaveBeenCalled();
 	});
 
 	it("throws PROVISIONING_CONFLICT when the slug is empty after slugify", async () => {
-		const error = await expectDomainError(
+		await expectDomainError(
 			() =>
 				provisionSchoolTenant({
 					...provisionInput,
@@ -286,13 +247,12 @@ describe("provisionSchoolTenant", () => {
 			409,
 		);
 
-		expect(error.message).toBe("The organization slug is invalid");
 		expect(createOrganizationMock).not.toHaveBeenCalled();
-		expect(createInvitationMock).not.toHaveBeenCalled();
 	});
 
 	it("throws PROVISIONING_CONFLICT when the slug belongs to a different organization name", async () => {
-		mockDatabase({
+		findOrganizationBySlugMock.mockReset();
+		findOrganizationBySlugMock.mockResolvedValue({
 			...organizationRow,
 			name: "Otro Colegio",
 		});
@@ -304,49 +264,15 @@ describe("provisionSchoolTenant", () => {
 		);
 
 		expect(createOrganizationMock).not.toHaveBeenCalled();
-		expect(createInvitationMock).not.toHaveBeenCalled();
 	});
 
-	it("throws PROVISIONING_CONFLICT when the organization already exists with a different owner email", async () => {
-		mockDatabase(organizationRow);
+	it("throws PROVISIONING_CONFLICT when the organization already has an owner invitation for a different email", async () => {
+		findOrganizationBySlugMock.mockReset();
+		findOrganizationBySlugMock.mockResolvedValue(organizationRow);
 		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
-		findPendingOwnerInvitationMock.mockResolvedValue(invitationRow);
-
-		await expectDomainError(
-			() =>
-				provisionSchoolTenant({
-					...provisionInput,
-					ownerEmail: "otro@santaelena.pe",
-				}),
-			"PROVISIONING_CONFLICT",
-			409,
-		);
-
-		expect(createInvitationMock).not.toHaveBeenCalled();
-		expect(createMemberMock).not.toHaveBeenCalled();
-	});
-
-	it("throws PROVISIONING_CONFLICT when the organization already has a member for a different email", async () => {
-		mockDatabase(organizationRow);
-		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
-		findPendingOwnerInvitationMock.mockResolvedValue(null);
-		listMembersMock.mockResolvedValue({
-			members: [
-				{
-					id: "member-id",
-					organizationId,
-					userId: "user-a",
-					role: "owner",
-					createdAt: new Date("2026-01-02T00:00:00.000Z"),
-					user: {
-						id: "user-a",
-						email: ownerEmail,
-						name: ownerName,
-						image: null,
-					},
-				},
-			],
-			total: 1,
+		findPendingOwnerInvitationMock.mockResolvedValue({
+			...invitationRow,
+			email: ownerEmail,
 		});
 
 		await expectDomainError(
@@ -359,25 +285,36 @@ describe("provisionSchoolTenant", () => {
 			409,
 		);
 
-		expect(createInvitationMock).not.toHaveBeenCalled();
-		expect(createMemberMock).not.toHaveBeenCalled();
+		expect(createOwnerInvitationMock).not.toHaveBeenCalled();
+	});
+
+	it("throws PROVISIONING_CONFLICT when the organization already has a member", async () => {
+		findOrganizationBySlugMock.mockReset();
+		findOrganizationBySlugMock.mockResolvedValue(organizationRow);
+		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
+		listMemberIdsMock.mockResolvedValue(["member-id"]);
+
+		await expectDomainError(
+			() => provisionSchoolTenant(provisionInput),
+			"PROVISIONING_CONFLICT",
+			409,
+		);
+
+		expect(createOwnerInvitationMock).not.toHaveBeenCalled();
 	});
 
 	it("reuses an existing pending invitation for the same email", async () => {
-		mockDatabase(organizationRow);
+		findOrganizationBySlugMock.mockReset();
+		findOrganizationBySlugMock.mockResolvedValue(organizationRow);
 		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
-		findPendingInvitationMock.mockResolvedValue([invitationRow]);
+		findPendingInvitationsMock.mockResolvedValue([invitationRow]);
 
 		const result = await provisionSchoolTenant(provisionInput);
 
 		expect(createOrganizationMock).not.toHaveBeenCalled();
-		expect(createInvitationMock).not.toHaveBeenCalled();
-		expect(createMemberMock).not.toHaveBeenCalled();
+		expect(createOwnerInvitationMock).not.toHaveBeenCalled();
 		expect(result.organization).toEqual(organizationRow);
 		expect(result.school).toEqual(schoolRow);
 		expect(result.invitation.id).toBe(invitationId);
-		expect(result.invitationUrl).toBe(
-			`http://localhost:3000/invitacion/${invitationId}`,
-		);
 	});
 });

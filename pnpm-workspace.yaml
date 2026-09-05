@@ -4,6 +4,9 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+catalog:
+  '@tanstack/react-form': 1.33.5
+  zod: 4.5.4
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.10.12'
   - '@turbo/darwin-arm64@2.10.12'

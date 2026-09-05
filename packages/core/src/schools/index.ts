@@ -1,4 +1,3 @@
-export { isValidEmail } from "./email.ts";
 export {
 	type AdminSchoolDetail,
 	type AdminSchoolPerson,
@@ -18,6 +17,7 @@ export {
 	writePendingOwnerName,
 } from "./organization-metadata.ts";
 export {
+	type GlobalAdmin,
 	type ProvisionSchoolTenantInput,
 	type ProvisionSchoolTenantResult,
 	provisionSchoolTenant,
@@ -27,12 +27,6 @@ export {
 	reactivateSchool,
 	suspendSchool,
 } from "./set-school-suspension.ts";
-export { slugifySchoolIdentifier } from "./slug.ts";
-export {
-	parseSchoolStatusFilter,
-	type SchoolStatusFilter,
-	schoolStatusLabel,
-} from "./status.ts";
 export {
 	type UpdateSchoolIdentityInput,
 	updateSchoolIdentity,

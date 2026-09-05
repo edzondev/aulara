@@ -11,6 +11,7 @@
 		"./errors": "./src/errors.ts",
 		"./guards": "./src/guards.ts",
 		"./permissions": "./src/permissions.ts",
+		"./org-provisioning": "./src/org-provisioning.ts",
 		"./school-context": "./src/school-context.ts",
 		"./types": "./src/types.ts"
 	},
@@ -18,6 +19,8 @@
 		"lint": "biome check --write",
 		"format": "biome format --write",
 		"check-types": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"auth:generate": "node --env-file=../../.env node_modules/auth/dist/index.mjs generate --config=src/server.ts --output=../db/src/schema/auth.generated.ts"
 	},
 	"dependencies": {
@@ -31,7 +34,8 @@
 		"@biomejs/biome": "2.5.10",
 		"@types/node": "26.3.0",
 		"auth": "1.7.2",
-		"typescript": "7.0.2"
+		"typescript": "7.0.2",
+		"vitest": "^4.1.11"
 	},
 	"packageManager": "pnpm@11.24.0"
 }

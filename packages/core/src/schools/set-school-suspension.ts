@@ -1,18 +1,21 @@
-import { requireGlobalAdmin } from "@aulara/auth/guards";
 import { getDatabase } from "@aulara/db/client";
-import { findSchoolById } from "@aulara/db/queries/schools";
-import { school } from "@aulara/db/schema";
-import { eq } from "drizzle-orm";
+import { findSchoolById, updateSchoolStatus } from "@aulara/db/queries/schools";
 import { DomainError } from "../errors.ts";
+import { parseDomainInput } from "../parse.ts";
+import type { GlobalAdmin } from "./provision-school.ts";
+import { schoolIdSchema } from "./school-id-schema.ts";
 
 export async function suspendSchool(input: {
-	headers: Headers;
+	admin: GlobalAdmin;
 	schoolId: string;
 }): Promise<void> {
-	await requireGlobalAdmin(input.headers);
-
+	const schoolId = parseDomainInput(
+		schoolIdSchema,
+		input.schoolId,
+		"The school id is invalid",
+	);
 	const database = getDatabase();
-	const existingSchool = await findSchoolById(database, input.schoolId);
+	const existingSchool = await findSchoolById(database, schoolId);
 
 	if (!existingSchool) {
 		throw new DomainError("SCHOOL_NOT_FOUND", "The school was not found", 404);
@@ -29,23 +32,23 @@ export async function suspendSchool(input: {
 		);
 	}
 
-	await database
-		.update(school)
-		.set({
-			status: "suspended",
-			statusBeforeSuspend: existingSchool.status,
-		})
-		.where(eq(school.id, input.schoolId));
+	await updateSchoolStatus(database, schoolId, {
+		status: "suspended",
+		statusBeforeSuspend: existingSchool.status,
+	});
 }
 
 export async function reactivateSchool(input: {
-	headers: Headers;
+	admin: GlobalAdmin;
 	schoolId: string;
 }): Promise<void> {
-	await requireGlobalAdmin(input.headers);
-
+	const schoolId = parseDomainInput(
+		schoolIdSchema,
+		input.schoolId,
+		"The school id is invalid",
+	);
 	const database = getDatabase();
-	const existingSchool = await findSchoolById(database, input.schoolId);
+	const existingSchool = await findSchoolById(database, schoolId);
 
 	if (!existingSchool) {
 		throw new DomainError("SCHOOL_NOT_FOUND", "The school was not found", 404);
@@ -59,11 +62,8 @@ export async function reactivateSchool(input: {
 		);
 	}
 
-	await database
-		.update(school)
-		.set({
-			status: existingSchool.statusBeforeSuspend ?? "onboarding",
-			statusBeforeSuspend: null,
-		})
-		.where(eq(school.id, input.schoolId));
+	await updateSchoolStatus(database, schoolId, {
+		status: existingSchool.statusBeforeSuspend ?? "onboarding",
+		statusBeforeSuspend: null,
+	});
 }
