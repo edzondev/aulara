@@ -14,7 +14,14 @@ node_modules
 .env.local
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
+
+# Local design mocks
+aulara_design/
+
+# Local admin bootstrap helper
+packages/auth/scripts/
 
 # Testing
 coverage
