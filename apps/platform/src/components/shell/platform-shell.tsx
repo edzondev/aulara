@@ -4,7 +4,6 @@ import { SidebarProvider, useSidebar } from "@aulara/ui/components/sidebar";
 import { type PropsWithChildren, useState } from "react";
 import { AppSidebar } from "./app-sidebar";
 import { MenuIcon } from "./shell-icons";
-import { useWideSidebar } from "./use-wide-sidebar";
 
 type PlatformShellProps = PropsWithChildren<{
 	initialSidebarPreference: boolean | null;
@@ -14,11 +13,10 @@ export function PlatformShell({
 	children = null,
 	initialSidebarPreference,
 }: PlatformShellProps) {
-	const isWideSidebar = useWideSidebar();
 	const [sidebarPreference, setSidebarPreference] = useState(
 		initialSidebarPreference,
 	);
-	const sidebarOpen = sidebarPreference ?? isWideSidebar;
+	const sidebarOpen = sidebarPreference ?? true;
 
 	return (
 		<>

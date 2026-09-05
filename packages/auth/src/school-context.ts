@@ -129,7 +129,7 @@ export async function resolveActiveSchoolContext(
 
 	if (!school || school.organizationId !== organizationId) {
 		throw new AuthContextError(
-			authContextErrorCodes.schoolNotFound,
+			authContextErrorCodes.activeSchoolNotFound,
 			"The active organization has no school",
 			404,
 		);
@@ -144,6 +144,24 @@ export async function requireActiveSchool(
 	const context = await resolveActiveSchoolContext(headers);
 
 	if (context.school.status !== "active") {
+		throw new AuthContextError(
+			authContextErrorCodes.schoolNotOperational,
+			"The active school is not operational",
+			403,
+		);
+	}
+
+	return context;
+}
+
+const workspaceStatuses = new Set(["onboarding", "active"]);
+
+export async function requireSchoolWorkspace(
+	headers: Headers,
+): Promise<AuthorizedSchoolContext> {
+	const context = await resolveActiveSchoolContext(headers);
+
+	if (!workspaceStatuses.has(context.school.status)) {
 		throw new AuthContextError(
 			authContextErrorCodes.schoolNotOperational,
 			"The active school is not operational",

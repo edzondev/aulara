@@ -6,6 +6,12 @@
 	"exports": {
 		"./errors": "./src/errors.ts",
 		"./schools": "./src/schools/index.ts",
+		"./schools/create-school-schema": "./src/schools/create-school-schema.ts",
+		"./schools/email-schema": "./src/schools/email-schema.ts",
+		"./schools/school-id-schema": "./src/schools/school-id-schema.ts",
+		"./schools/slug": "./src/schools/slug.ts",
+		"./schools/status": "./src/schools/status.ts",
+		"./schools/types": "./src/schools/types.ts",
 		"./billing": "./src/billing/index.ts",
 		"./tuition": "./src/tuition/index.ts",
 		"./payments": "./src/payments/index.ts"
@@ -13,19 +19,23 @@
 	"scripts": {
 		"lint": "biome check --write",
 		"format": "biome format --write",
-		"check-types": "tsc -p tsconfig.json --noEmit"
+		"check-types": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@aulara/auth": "workspace:*",
 		"@aulara/db": "workspace:*",
-		"better-auth": "1.7.2",
-		"drizzle-orm": "0.45.2"
+		"@aulara/env": "workspace:*",
+		"temporal-polyfill": "^1.0.4",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@aulara/ts-config": "workspace:*",
 		"@biomejs/biome": "2.5.10",
 		"@types/node": "26.3.0",
-		"typescript": "7.0.2"
+		"typescript": "7.0.2",
+		"vitest": "^4.1.11"
 	},
 	"packageManager": "pnpm@11.24.0"
 }

@@ -3,6 +3,7 @@ export {
 	type MonthlyTuitionChargeInput,
 	type MonthlyTuitionChargeResult,
 } from "./create-tuition-charge.ts";
+export { monthlyTuitionChargeSchema } from "./create-tuition-charge-schema.ts";
 export {
 	applyPercentageToCents,
 	formatCents,

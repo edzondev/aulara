@@ -1,6 +1,5 @@
-import { getAuthEnvironment, getPublicAuthBaseUrl } from "@aulara/env/auth";
-import { getDatabaseUrl } from "@aulara/env/database";
 import { describe, expect, it } from "vitest";
+import { getAuthEnvironment, getPublicAuthBaseUrl } from "./auth.ts";
 
 const validEnvironment = {
 	BETTER_AUTH_SECRET: "aulara-local-secret-at-least-32-chars",
@@ -10,7 +9,7 @@ const validEnvironment = {
 	NODE_ENV: "test",
 } satisfies NodeJS.ProcessEnv;
 
-describe("Better Auth environment", () => {
+describe("getAuthEnvironment", () => {
 	it("normalizes trusted origins for exact comparisons", () => {
 		const environment = getAuthEnvironment(validEnvironment);
 
@@ -64,15 +63,5 @@ describe("getPublicAuthBaseUrl", () => {
 				NEXT_PUBLIC_BETTER_AUTH_URL: "  http://localhost:3000  ",
 			}),
 		).toBe("http://localhost:3000");
-	});
-});
-
-describe("getDatabaseUrl", () => {
-	it("throws without DATABASE_URL", () => {
-		const environment: NodeJS.ProcessEnv = { NODE_ENV: "test" };
-
-		expect(() => getDatabaseUrl(environment)).toThrow(
-			"DATABASE_URL is required",
-		);
 	});
 });

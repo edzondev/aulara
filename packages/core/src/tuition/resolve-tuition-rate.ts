@@ -1,10 +1,13 @@
 import type { AuthorizedSchoolContext } from "@aulara/auth/types";
 import { type AppDatabase, getDatabase } from "@aulara/db/client";
 import { findTuitionRate } from "@aulara/db/queries/tuition-rates";
-import type { tuitionRate } from "@aulara/db/schema";
 import { DomainError } from "../errors.ts";
+import { parseDomainInput } from "../parse.ts";
+import { resolveTuitionRateSchema } from "./resolve-tuition-rate-schema.ts";
 
-export type TuitionRate = typeof tuitionRate.$inferSelect;
+export type TuitionRate = NonNullable<
+	Awaited<ReturnType<typeof findTuitionRate>>
+>;
 
 export type ResolveTuitionRateInput = {
 	academicYearId: string;
@@ -42,10 +45,16 @@ export async function resolveTuitionRate(
 	context: AuthorizedSchoolContext,
 	input: ResolveTuitionRateInput,
 ): Promise<TuitionRate> {
+	const parsed = parseDomainInput(
+		resolveTuitionRateSchema,
+		input,
+		"The tuition rate input is invalid",
+	);
+
 	return requireTuitionRate(
 		getDatabase(),
 		context.school.id,
-		input.academicYearId,
-		input.gradeId ?? null,
+		parsed.academicYearId,
+		parsed.gradeId ?? null,
 	);
 }

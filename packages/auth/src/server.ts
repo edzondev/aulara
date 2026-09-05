@@ -6,6 +6,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { admin, organization } from "better-auth/plugins";
+import { ownerInvitationExpiresInSeconds } from "./constants.ts";
 
 const environment = getAuthEnvironment();
 const database = getDatabase();
@@ -54,6 +55,7 @@ const authOptions = {
 			dynamicAccessControl: {
 				enabled: false,
 			},
+			invitationExpiresIn: ownerInvitationExpiresInSeconds,
 			teams: {
 				enabled: false,
 			},

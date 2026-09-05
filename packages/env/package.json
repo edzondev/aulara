@@ -14,13 +14,16 @@
 	"scripts": {
 		"lint": "biome check --write",
 		"format": "biome format --write",
-		"check-types": "tsc -p tsconfig.json --noEmit"
+		"check-types": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"devDependencies": {
 		"@aulara/ts-config": "workspace:*",
 		"@biomejs/biome": "2.5.10",
 		"@types/node": "26.3.0",
-		"typescript": "7.0.2"
+		"typescript": "7.0.2",
+		"vitest": "^4.1.11"
 	},
 	"packageManager": "pnpm@11.24.0"
 }

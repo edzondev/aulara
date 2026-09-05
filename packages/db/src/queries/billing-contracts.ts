@@ -7,12 +7,12 @@ import { billingContract } from "../schema/schools.ts";
  * ranges: [startsOn, endsOn). Returns null when no confirmed contract
  * covers the date.
  */
-export function findBillingContractAtDate(
+export async function findBillingContractAtDate(
 	db: AppDatabase,
 	schoolId: string,
 	onDate: string,
 ) {
-	return db
+	const rows = await db
 		.select()
 		.from(billingContract)
 		.where(
@@ -24,6 +24,24 @@ export function findBillingContractAtDate(
 			),
 		)
 		.orderBy(desc(billingContract.startsOn))
-		.limit(1)
-		.then((rows) => rows[0] ?? null);
+		.limit(1);
+
+	return rows[0] ?? null;
+}
+
+export async function insertBillingContractRow(
+	db: AppDatabase,
+	values: {
+		schoolId: string;
+		status: "draft" | "confirmed";
+		pricePerActiveStudent: string;
+		minimumMonthlyAmount: string | null;
+		currencyCode: string;
+		startsOn: string;
+		endsOn: string | null;
+		notes: string | null;
+	},
+) {
+	const [row] = await db.insert(billingContract).values(values).returning();
+	return row ?? null;
 }

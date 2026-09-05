@@ -3,7 +3,7 @@ export const authContextErrorCodes = {
 	authenticationRequired: "AUTHENTICATION_REQUIRED",
 	globalAdminRequired: "GLOBAL_ADMIN_REQUIRED",
 	organizationMembershipRequired: "ORGANIZATION_MEMBERSHIP_REQUIRED",
-	schoolNotFound: "SCHOOL_NOT_FOUND",
+	activeSchoolNotFound: "ACTIVE_SCHOOL_NOT_FOUND",
 	schoolNotOperational: "SCHOOL_NOT_OPERATIONAL",
 } as const;
 

@@ -1,10 +1,15 @@
 import type { AuthorizedSchoolContext } from "@aulara/auth/types";
-import { type AppDatabase, getDatabase } from "@aulara/db/client";
-import type { PaymentMethod } from "@aulara/db/schema";
-import { charge, payment, paymentAllocation } from "@aulara/db/schema";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { getDatabase } from "@aulara/db/client";
+import { lockChargeForUpdate } from "@aulara/db/queries/charges";
+import {
+	getAllocatedAmount,
+	insertPayment,
+	insertPaymentAllocation,
+} from "@aulara/db/queries/payments";
 import { DomainError } from "../errors.ts";
+import { parseDomainInput } from "../parse.ts";
 import { formatCents, parseAmountToCents } from "../tuition/decimal.ts";
+import { recordPaymentSchema } from "./record-payment-schema.ts";
 
 export type PaymentAllocationInput = {
 	chargeId: string;
@@ -14,7 +19,7 @@ export type PaymentAllocationInput = {
 export type RecordPaymentInput = {
 	amount: string;
 	currencyCode: string;
-	paymentMethod: PaymentMethod;
+	paymentMethod: "cash" | "bank_transfer" | "card" | "wallet" | "other";
 	reference?: string;
 	notes?: string;
 	paidAt?: Date;
@@ -22,57 +27,22 @@ export type RecordPaymentInput = {
 	allocations: PaymentAllocationInput[];
 };
 
-export type Payment = typeof payment.$inferSelect;
+export type Payment = NonNullable<Awaited<ReturnType<typeof insertPayment>>>;
 
-/**
- * Sums the allocations a charge has received from non-voided payments.
- */
-async function getAllocatedCents(
-	tx: AppDatabase,
-	schoolId: string,
-	chargeId: string,
-): Promise<bigint> {
-	const [row] = await tx
-		.select({
-			allocated: sql<
-				string | null
-			>`coalesce(sum(${paymentAllocation.amount}), 0)`,
-		})
-		.from(paymentAllocation)
-		.innerJoin(
-			payment,
-			and(
-				eq(payment.schoolId, paymentAllocation.schoolId),
-				eq(payment.id, paymentAllocation.paymentId),
-			),
-		)
-		.where(
-			and(
-				eq(paymentAllocation.schoolId, schoolId),
-				eq(paymentAllocation.chargeId, chargeId),
-				isNull(payment.voidedAt),
-			),
-		);
-
-	return parseAmountToCents(row?.allocated ?? "0");
+export function chargeIdsInLockOrder(chargeIds: Iterable<string>): string[] {
+	return [...chargeIds].sort();
 }
 
-/**
- * Records a payment and allocates it to charges, all inside ONE
- * Drizzle transaction: the payment is inserted first, then every target
- * charge is locked with SELECT ... FOR UPDATE (composite schoolId + id)
- * and validated (not voided, same currency, allocations within the
- * charge total and within the payment amount). Any failure rolls back
- * the payment and all allocations.
- *
- * Duplicate `chargeId` entries in `allocations` are merged into a
- * single allocation per charge.
- */
 export async function recordPaymentWithAllocations(
 	context: AuthorizedSchoolContext,
 	input: RecordPaymentInput,
 ): Promise<Payment> {
-	const paymentCents = parseAmountToCents(input.amount);
+	const parsed = parseDomainInput(
+		recordPaymentSchema,
+		input,
+		"The payment input is invalid",
+	);
+	const paymentCents = parseAmountToCents(parsed.amount);
 
 	if (paymentCents <= 0n) {
 		throw new DomainError(
@@ -85,7 +55,7 @@ export async function recordPaymentWithAllocations(
 	const allocationsByCharge = new Map<string, bigint>();
 	let totalAllocatedCents = 0n;
 
-	for (const allocation of input.allocations) {
+	for (const allocation of parsed.allocations) {
 		const amountCents = parseAmountToCents(allocation.amount);
 
 		if (amountCents <= 0n) {
@@ -111,37 +81,37 @@ export async function recordPaymentWithAllocations(
 	}
 
 	return getDatabase().transaction(async (tx) => {
-		const [paymentRow] = await tx
-			.insert(payment)
-			.values({
-				schoolId: context.school.id,
-				amount: formatCents(paymentCents),
-				currencyCode: input.currencyCode,
-				paymentMethod: input.paymentMethod,
-				reference: input.reference ?? null,
-				notes: input.notes ?? null,
-				paidAt: input.paidAt,
-				recordedByUserId: input.recordedByUserId,
-			})
-			.returning();
+		const paymentRow = await insertPayment(tx, {
+			schoolId: context.school.id,
+			amount: formatCents(paymentCents),
+			currencyCode: parsed.currencyCode,
+			paymentMethod: parsed.paymentMethod,
+			reference: parsed.reference ?? null,
+			notes: parsed.notes ?? null,
+			paidAt: parsed.paidAt,
+			recordedByUserId: parsed.recordedByUserId,
+		});
 
 		if (!paymentRow) {
 			throw new DomainError(
-				"INVALID_MONEY_AMOUNT",
+				"INTERNAL",
 				"The payment could not be recorded",
 				500,
 			);
 		}
 
-		for (const [chargeId, amountCents] of allocationsByCharge) {
-			const [lockedCharge] = await tx
-				.select()
-				.from(charge)
-				.where(
-					and(eq(charge.schoolId, context.school.id), eq(charge.id, chargeId)),
-				)
-				.for("update")
-				.limit(1);
+		for (const chargeId of chargeIdsInLockOrder(allocationsByCharge.keys())) {
+			const amountCents = allocationsByCharge.get(chargeId);
+
+			if (amountCents === undefined) {
+				continue;
+			}
+
+			const lockedCharge = await lockChargeForUpdate(
+				tx,
+				context.school.id,
+				chargeId,
+			);
 
 			if (!lockedCharge) {
 				throw new DomainError(
@@ -159,18 +129,16 @@ export async function recordPaymentWithAllocations(
 				);
 			}
 
-			if (lockedCharge.currencyCode !== input.currencyCode) {
+			if (lockedCharge.currencyCode !== parsed.currencyCode) {
 				throw new DomainError(
 					"CURRENCY_MISMATCH",
-					`The charge is in ${lockedCharge.currencyCode} but the payment is in ${input.currencyCode}`,
+					`The charge is in ${lockedCharge.currencyCode} but the payment is in ${parsed.currencyCode}`,
 					409,
 				);
 			}
 
-			const allocatedCents = await getAllocatedCents(
-				tx,
-				context.school.id,
-				chargeId,
+			const allocatedCents = parseAmountToCents(
+				await getAllocatedAmount(tx, context.school.id, chargeId),
 			);
 
 			if (
@@ -184,7 +152,7 @@ export async function recordPaymentWithAllocations(
 				);
 			}
 
-			await tx.insert(paymentAllocation).values({
+			await insertPaymentAllocation(tx, {
 				schoolId: context.school.id,
 				paymentId: paymentRow.id,
 				chargeId,

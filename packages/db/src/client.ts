@@ -14,8 +14,23 @@ const globalForDatabase = globalThis as typeof globalThis & {
 	__aularaDatabase?: DatabaseHandle;
 };
 
+export const databasePoolOptions = {
+	connectionTimeoutMillis: 5_000,
+	idleTimeoutMillis: 30_000,
+	max: 10,
+} as const;
+
+export function onUnexpectedPoolError(_error: Error): void {
+	// Prevents the process from crashing on idle client errors.
+	// Apps may replace this by listening on the pool they create.
+}
+
 export function createDatabase(connectionString: string): DatabaseHandle {
-	const pool = new Pool({ connectionString });
+	const pool = new Pool({
+		connectionString,
+		...databasePoolOptions,
+	});
+	pool.on("error", onUnexpectedPoolError);
 	const db = drizzle(pool, { schema });
 	return { db, pool };
 }

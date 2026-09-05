@@ -42,3 +42,10 @@ export function parseOrganizationRoles(
 
 	return parsed as OrganizationRole[];
 }
+
+export function hasOrganizationRole(
+	role: string | null | undefined,
+	wanted: OrganizationRole,
+): boolean {
+	return parseOrganizationRoles(role)?.includes(wanted) === true;
+}

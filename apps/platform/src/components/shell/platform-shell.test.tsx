@@ -97,4 +97,17 @@ describe("PlatformShell", () => {
 			container.querySelector('[data-slot="sidebar"][data-state="expanded"]'),
 		).toBeInTheDocument();
 	});
+
+	it("does not collapse the first-visit sidebar from a media query", () => {
+		const { container } = render(
+			<PlatformShell initialSidebarPreference={null}>
+				<div>Área de trabajo</div>
+			</PlatformShell>,
+		);
+
+		expect(container.querySelector("[data-auto-sidebar]")).toBeInTheDocument();
+		expect(
+			container.querySelector('[data-slot="sidebar"][data-state="expanded"]'),
+		).toBeInTheDocument();
+	});
 });

@@ -1,0 +1,2 @@
+ALTER TABLE "school" ADD COLUMN "status_before_suspend" text;--> statement-breakpoint
+ALTER TABLE "school" ADD CONSTRAINT "school_status_before_suspend_check" CHECK ("school"."status_before_suspend" is null or "school"."status_before_suspend" in ('onboarding', 'active'));

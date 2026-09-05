@@ -1,14 +1,14 @@
+import { describe, expect, it } from "vitest";
 import {
 	createCorsPreflightResponse,
 	getCorsHeaders,
 	withCors,
-} from "@aulara/auth/cors";
-import { describe, expect, it } from "vitest";
+} from "./cors.ts";
 
 const allowedOrigin = "http://localhost:3001";
 const allowedOrigins = [allowedOrigin];
 
-describe("Better Auth CORS", () => {
+describe("CORS", () => {
 	it("reflects only an allowlisted origin and allows credentials", () => {
 		const request = new Request("http://localhost:3000/api/auth/get-session", {
 			headers: { Origin: allowedOrigin },

@@ -5,6 +5,7 @@ export {
 } from "@aulara/auth/guards";
 export {
 	requireActiveSchool,
+	requireSchoolWorkspace,
 	resolveActiveSchoolContext,
 } from "@aulara/auth/school-context";
 export { auth } from "@aulara/auth/server";

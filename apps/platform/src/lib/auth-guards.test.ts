@@ -6,6 +6,7 @@ import {
 } from "@aulara/auth/guards";
 import {
 	requireActiveSchool,
+	requireSchoolWorkspace,
 	resolveActiveSchoolContext,
 } from "@aulara/auth/school-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -84,7 +85,7 @@ function buildSession({ activeOrganizationId, role }: SessionFixture) {
 function mockSchoolContext(
 	options: {
 		memberRole?: string;
-		schoolStatus?: "active" | "suspended";
+		schoolStatus?: "onboarding" | "active" | "suspended" | "cancelled";
 		withSchool?: boolean;
 	} = {},
 ) {
@@ -223,12 +224,12 @@ describe("resolveActiveSchoolContext", () => {
 		);
 	});
 
-	it("rejects with 404 SCHOOL_NOT_FOUND when the organization has no school", async () => {
+	it("rejects with 404 ACTIVE_SCHOOL_NOT_FOUND when the organization has no school", async () => {
 		mockSchoolContext({ withSchool: false });
 
 		await expectAuthContextError(
 			() => resolveActiveSchoolContext(new Headers()),
-			authContextErrorCodes.schoolNotFound,
+			authContextErrorCodes.activeSchoolNotFound,
 			404,
 		);
 	});
@@ -282,5 +283,33 @@ describe("requireActiveSchool", () => {
 		const context = await requireActiveSchool(new Headers());
 
 		expect(context.school.id).toBe(schoolId);
+	});
+});
+
+describe("requireSchoolWorkspace", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		getDatabaseMock.mockReturnValue({});
+	});
+
+	it("allows onboarding schools", async () => {
+		mockSchoolContext({ schoolStatus: "onboarding" });
+		const context = await requireSchoolWorkspace(new Headers());
+		expect(context.school.status).toBe("onboarding");
+	});
+
+	it("allows active schools", async () => {
+		mockSchoolContext({ schoolStatus: "active" });
+		const context = await requireSchoolWorkspace(new Headers());
+		expect(context.school.status).toBe("active");
+	});
+
+	it("rejects suspended schools with SCHOOL_NOT_OPERATIONAL", async () => {
+		mockSchoolContext({ schoolStatus: "suspended" });
+		await expectAuthContextError(
+			() => requireSchoolWorkspace(new Headers()),
+			authContextErrorCodes.schoolNotOperational,
+			403,
+		);
 	});
 });
