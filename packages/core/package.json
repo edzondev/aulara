@@ -28,7 +28,7 @@
 		"@aulara/db": "workspace:*",
 		"@aulara/env": "workspace:*",
 		"temporal-polyfill": "^1.0.4",
-		"zod": "catalog:"
+		"zod": "4.5.4"
 	},
 	"devDependencies": {
 		"@aulara/ts-config": "workspace:*",

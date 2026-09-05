@@ -4,15 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@tanstack/react-form':
-      specifier: 1.33.5
-      version: 1.33.5
-    zod:
-      specifier: 4.5.4
-      version: 4.5.4
-
 importers:
 
   .:
@@ -42,7 +33,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@tanstack/react-form':
-        specifier: 'catalog:'
+        specifier: 1.33.5
         version: 1.33.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next:
         specifier: 16.3.2
@@ -54,7 +45,7 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
       zod:
-        specifier: 'catalog:'
+        specifier: 4.5.4
         version: 4.5.4
     devDependencies:
       '@biomejs/biome':
@@ -241,7 +232,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       zod:
-        specifier: 'catalog:'
+        specifier: 4.5.4
         version: 4.5.4
     devDependencies:
       '@aulara/ts-config':
