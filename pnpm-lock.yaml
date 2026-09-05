@@ -72,6 +72,9 @@ importers:
       '@aulara/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@aulara/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@aulara/env':
         specifier: workspace:*
         version: link:../../packages/env
