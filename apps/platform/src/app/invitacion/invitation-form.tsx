@@ -8,7 +8,9 @@ import {
 } from "@aulara/ui/components/field";
 import { Input } from "@aulara/ui/components/input";
 import { type FormEvent, useState } from "react";
-import { acceptOwnerInvitation, joinOwnerInvitation } from "./actions";
+import { authClient } from "@/lib/auth-client";
+import { acceptOwnerInvitation } from "./actions";
+import { authenticateInvitee } from "./authenticate-invitee";
 
 type InvitationFormProps = {
 	defaultName: string;
@@ -49,13 +51,21 @@ export function InvitationForm({
 		setPending(true);
 
 		try {
-			const result = matchingSession
-				? await acceptOwnerInvitation(invitationId)
-				: await joinOwnerInvitation({
-						invitationId,
-						name,
-						password,
-					});
+			if (!matchingSession) {
+				const authenticated = await authenticateInvitee(authClient, {
+					email,
+					name: name.trim() || defaultName || email,
+					password,
+				});
+
+				if (!authenticated.ok) {
+					setError(authenticated.message);
+					setPending(false);
+					return;
+				}
+			}
+
+			const result = await acceptOwnerInvitation(invitationId);
 
 			if (!result.ok) {
 				setError(result.message);

@@ -11,9 +11,7 @@ import { invitationErrorMessage } from "./invitation-errors";
 
 type JoinResult = { ok: true } | { ok: false; code: string; message: string };
 
-async function loadInvitation(
-	invitationId: string,
-): Promise<
+async function loadInvitation(invitationId: string): Promise<
 	| {
 			ok: true;
 			invitation: Awaited<ReturnType<typeof getOwnerInvitationForAccept>>;
@@ -74,73 +72,6 @@ async function acceptInvitationOrError(
 	return { ok: true };
 }
 
-export async function joinOwnerInvitation(input: {
-	invitationId: string;
-	name: string;
-	password: string;
-}): Promise<JoinResult> {
-	const loaded = await loadInvitation(input.invitationId);
-
-	if (!loaded.ok) {
-		return loaded;
-	}
-
-	const { invitation } = loaded;
-	const headersList = await headers();
-	const session = await auth.api.getSession({ headers: headersList });
-
-	if (
-		session &&
-		session.user.email.toLowerCase() !== invitation.email.toLowerCase()
-	) {
-		return {
-			ok: false,
-			code: "INVITATION_EMAIL_MISMATCH",
-			message: invitationErrorMessage("INVITATION_EMAIL_MISMATCH"),
-		};
-	}
-
-	if (!session) {
-		try {
-			await auth.api.signUpEmail({
-				body: {
-					email: invitation.email,
-					name:
-						input.name.trim() ||
-						invitation.pendingOwnerName ||
-						invitation.email,
-					password: input.password,
-				},
-				headers: headersList,
-			});
-		} catch {
-			try {
-				await auth.api.signInEmail({
-					body: { email: invitation.email, password: input.password },
-					headers: headersList,
-				});
-			} catch {
-				return {
-					ok: false,
-					code: "AUTHENTICATION_REQUIRED",
-					message: "No se pudo entrar con ese correo y contraseña.",
-				};
-			}
-		}
-	}
-
-	const accepted = await acceptInvitationOrError(
-		input.invitationId,
-		await headersWithCookies(),
-	);
-
-	if (!accepted.ok) {
-		return accepted;
-	}
-
-	redirect("/inicio");
-}
-
 export async function acceptOwnerInvitation(
 	invitationId: string,
 ): Promise<JoinResult> {
@@ -150,7 +81,7 @@ export async function acceptOwnerInvitation(
 		return loaded;
 	}
 
-	const headersList = await headers();
+	const headersList = await headersWithCookies();
 	let user: Awaited<ReturnType<typeof requireAuthenticatedUser>>;
 
 	try {
