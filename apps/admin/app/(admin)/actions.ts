@@ -1,15 +1,38 @@
 "use server";
 
 import { DomainError } from "@aulara/core/errors";
-import { provisionSchoolTenant } from "@aulara/core/schools";
+import {
+	provisionSchoolTenant,
+	reactivateSchool,
+	reissueOwnerInvitation,
+	suspendSchool,
+} from "@aulara/core/schools";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
-function publicMessage(error: DomainError): string {
+function publicMessage(error: DomainError, fallback: string): string {
 	if (error.code === "PROVISIONING_CONFLICT") {
 		return "Ese identificador ya existe o el correo ya es miembro.";
 	}
 
-	return "No se pudo crear el colegio.";
+	if (error.code === "SCHOOL_NOT_FOUND") {
+		return "No se encontró el colegio.";
+	}
+
+	if (error.code === "INVITATION_NOT_PENDING") {
+		return "La invitación del propietario ya no está pendiente.";
+	}
+
+	if (error.code === "SCHOOL_NOT_SUSPENDABLE") {
+		return "No se puede cambiar el acceso en el estado actual.";
+	}
+
+	return fallback;
+}
+
+function revalidateSchoolPaths(schoolId: string): void {
+	revalidatePath("/colegios");
+	revalidatePath(`/colegios/${schoolId}`);
 }
 
 export async function createSchoolAction(input: {
@@ -33,7 +56,75 @@ export async function createSchoolAction(input: {
 		};
 	} catch (error) {
 		if (error instanceof DomainError) {
-			return { ok: false, message: publicMessage(error) };
+			return {
+				ok: false,
+				message: publicMessage(error, "No se pudo crear el colegio."),
+			};
+		}
+		throw error;
+	}
+}
+
+export async function reissueInvitationAction(
+	schoolId: string,
+): Promise<
+	{ ok: true; invitationUrl: string } | { ok: false; message: string }
+> {
+	try {
+		const result = await reissueOwnerInvitation({
+			headers: await headers(),
+			schoolId,
+		});
+		revalidateSchoolPaths(schoolId);
+		return { ok: true, invitationUrl: result.invitationUrl };
+	} catch (error) {
+		if (error instanceof DomainError) {
+			return {
+				ok: false,
+				message: publicMessage(error, "No se pudo reenviar la invitación."),
+			};
+		}
+		throw error;
+	}
+}
+
+export async function suspendSchoolAction(
+	schoolId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+	try {
+		await suspendSchool({
+			headers: await headers(),
+			schoolId,
+		});
+		revalidateSchoolPaths(schoolId);
+		return { ok: true };
+	} catch (error) {
+		if (error instanceof DomainError) {
+			return {
+				ok: false,
+				message: publicMessage(error, "No se pudo suspender el colegio."),
+			};
+		}
+		throw error;
+	}
+}
+
+export async function reactivateSchoolAction(
+	schoolId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+	try {
+		await reactivateSchool({
+			headers: await headers(),
+			schoolId,
+		});
+		revalidateSchoolPaths(schoolId);
+		return { ok: true };
+	} catch (error) {
+		if (error instanceof DomainError) {
+			return {
+				ok: false,
+				message: publicMessage(error, "No se pudo reactivar el colegio."),
+			};
 		}
 		throw error;
 	}
