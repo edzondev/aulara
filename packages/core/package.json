@@ -6,6 +6,8 @@
 	"exports": {
 		"./errors": "./src/errors.ts",
 		"./schools": "./src/schools/index.ts",
+		"./schools/slug": "./src/schools/slug.ts",
+		"./schools/status": "./src/schools/status.ts",
 		"./billing": "./src/billing/index.ts",
 		"./tuition": "./src/tuition/index.ts",
 		"./payments": "./src/payments/index.ts"

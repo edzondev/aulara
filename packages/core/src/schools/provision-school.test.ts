@@ -16,6 +16,7 @@ const createInvitationMock = vi.hoisted(() => vi.fn());
 const createMemberMock = vi.hoisted(() => vi.fn());
 const findOrganizationBySlugMock = vi.hoisted(() => vi.fn());
 const findMemberByEmailMock = vi.hoisted(() => vi.fn());
+const listMembersMock = vi.hoisted(() => vi.fn());
 const findPendingInvitationMock = vi.hoisted(() => vi.fn());
 const findPendingOwnerInvitationMock = vi.hoisted(() => vi.fn());
 const getAuthEnvironmentMock = vi.hoisted(() => vi.fn());
@@ -179,6 +180,7 @@ describe("provisionSchoolTenant", () => {
 			createMember: createMemberMock,
 			findOrganizationBySlug: findOrganizationBySlugMock,
 			findMemberByEmail: findMemberByEmailMock,
+			listMembers: listMembersMock,
 			findPendingInvitation: findPendingInvitationMock,
 		});
 		createOrganizationMock.mockResolvedValue({
@@ -187,6 +189,7 @@ describe("provisionSchoolTenant", () => {
 		});
 		createInvitationMock.mockResolvedValue(invitationRow);
 		findMemberByEmailMock.mockResolvedValue(null);
+		listMembersMock.mockResolvedValue({ members: [], total: 0 });
 		findPendingInvitationMock.mockResolvedValue([]);
 		findPendingOwnerInvitationMock.mockResolvedValue(null);
 		findSchoolByOrganizationIdMock.mockResolvedValue(null);
@@ -292,6 +295,43 @@ describe("provisionSchoolTenant", () => {
 		mockDatabase(organizationRow);
 		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
 		findPendingOwnerInvitationMock.mockResolvedValue(invitationRow);
+
+		await expectDomainError(
+			() =>
+				provisionSchoolTenant({
+					...provisionInput,
+					ownerEmail: "otro@santaelena.pe",
+				}),
+			"PROVISIONING_CONFLICT",
+			409,
+		);
+
+		expect(createInvitationMock).not.toHaveBeenCalled();
+		expect(createMemberMock).not.toHaveBeenCalled();
+	});
+
+	it("throws PROVISIONING_CONFLICT when the organization already has a member for a different email", async () => {
+		mockDatabase(organizationRow);
+		findSchoolByOrganizationIdMock.mockResolvedValue(schoolRow);
+		findPendingOwnerInvitationMock.mockResolvedValue(null);
+		listMembersMock.mockResolvedValue({
+			members: [
+				{
+					id: "member-id",
+					organizationId,
+					userId: "user-a",
+					role: "owner",
+					createdAt: new Date("2026-01-02T00:00:00.000Z"),
+					user: {
+						id: "user-a",
+						email: ownerEmail,
+						name: ownerName,
+						image: null,
+					},
+				},
+			],
+			total: 1,
+		});
 
 		await expectDomainError(
 			() =>

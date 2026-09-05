@@ -186,15 +186,15 @@ export async function provisionSchoolTenant(
 			organizationName,
 		));
 
-	const existingMember = await adapter.findMemberByEmail({
-		email,
+	const { members } = await adapter.listMembers({
 		organizationId: resolvedOrganization.id,
+		limit: 1,
 	});
 
-	if (existingMember) {
+	if (members.length > 0) {
 		throw new DomainError(
 			"PROVISIONING_CONFLICT",
-			"The owner email already belongs to a member of this organization",
+			"The organization already has a member",
 			409,
 		);
 	}

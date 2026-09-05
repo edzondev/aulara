@@ -1,6 +1,6 @@
 "use client";
 
-import type { SchoolStatusFilter } from "@aulara/core/schools";
+import type { SchoolStatusFilter } from "@aulara/core/schools/status";
 import {
 	RadioGroupPrimitive,
 	RadioPrimitive,

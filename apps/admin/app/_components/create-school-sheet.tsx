@@ -1,6 +1,6 @@
 "use client";
 
-import { slugifySchoolIdentifier } from "@aulara/core/schools";
+import { slugifySchoolIdentifier } from "@aulara/core/schools/slug";
 import { Badge } from "@aulara/ui/components/badge";
 import { Button } from "@aulara/ui/components/button";
 import {

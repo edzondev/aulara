@@ -1,7 +1,7 @@
 import {
 	parseSchoolStatusFilter,
 	type SchoolStatusFilter,
-} from "@aulara/core/schools";
+} from "@aulara/core/schools/status";
 
 let pendingQuery: string | undefined;
 
