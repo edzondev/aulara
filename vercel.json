@@ -1,0 +1,5 @@
+{
+	"buildCommand": "pnpm turbo build --filter=@aulara/admin",
+	"installCommand": "pnpm install --frozen-lockfile",
+	"framework": "nextjs"
+}
